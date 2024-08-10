@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/network/data/notes_provider.dart';
 import 'package:task_management/network/models/notes_model.dart';
+import 'package:task_management/ui/note_detail_screen.dart';
+
+import '../widgets/note_input_widget.dart';
+import '../widgets/title_input_widget.dart';
 
 class AddNoteScreen extends StatefulWidget {
   const AddNoteScreen({super.key});
@@ -13,16 +18,19 @@ class AddNoteScreen extends StatefulWidget {
 class _AddNoteScreenState extends State<AddNoteScreen> {
 
   final FocusNode _noteFocusNode = FocusNode();
+  final FocusNode _titleFocusNode = FocusNode();
+
   late TextEditingController titleController;
   late TextEditingController noteController;
+  final ValueNotifier<bool> isNoteValid = ValueNotifier<bool>(false);
 
   Color nav_bg = Colors.lime;
 
   @override
   void initState() {
     super.initState();
-    titleController = TextEditingController();
-    noteController = TextEditingController();
+    titleController = TextEditingController()..addListener(checkForValidNote);
+    noteController = TextEditingController()..addListener(checkForValidNote);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _noteFocusNode.requestFocus();
     });
@@ -31,45 +39,56 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   @override
   void dispose() {
     _noteFocusNode.dispose();
-    titleController.dispose();
-    noteController.dispose();
+    titleController..removeListener(checkForValidNote)..dispose();
+    noteController..removeListener(checkForValidNote)..dispose();
 
     super.dispose();
   }
 
-  void checkForValidNote() {
-    print('entered');
+  bool checkForValidNote() {
     if(titleController.text.trim().isNotEmpty || noteController.text.trim().isNotEmpty) {
-      // add the note
-      NoteModel note = NoteModel(title: titleController.text, note: noteController.text, bookmarked: false);
-      // Provider.of<NotesProvider>(context).addNote = note;
+
+      isNoteValid.value = true;
+      return true;
+    } else {
+      isNoteValid.value = false;
+      return false;
     }
-    Navigator.of(context).pop();
+  }
+
+  void createNote() {
+    NoteModel note = NoteModel(title: titleController.text, note: noteController.text, bookmarked: false);
+    context.read<NotesProvider>().addNote(note);
+  }
+
+  void submitNote() {
+    NoteModel note = NoteModel(title: titleController.text, note: noteController.text, bookmarked: false);
+    int index = context.read<NotesProvider>().addNoteReturnlength(note);
+
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => NoteDetailScreen(index - 1)));
 
   }
 
+
   @override
   Widget build(BuildContext context) {
+
+    String formattedTime = DateFormat('EEEE, MMMM d, hh:mm a').format(DateTime.now());
+
 
 
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (titleController.text.trim().isNotEmpty || noteController.text.trim().isNotEmpty) {
-          // Add the note
-          print('inside calculation');
-          NoteModel note = NoteModel(title: titleController.text, note: noteController.text, bookmarked: false);
-          context.read<NotesProvider>().addNote(note);
+        if (checkForValidNote()) {
+
+
+          createNote();
           titleController.clear();
           noteController.clear();
-          // print('length : ${context.read<NotesProvider>().notes.length}');
-
-          // Ensure the navigation happens after the note is added
 
         }
-          print('outside');
 
-            // Navigator.of(context).pop();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
@@ -85,69 +104,17 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
           appBar: buildAppBar(context),
           body: ListView(
             children: [
-              Container(
+              SizedBox(
                 width: double.infinity,
                 height: MediaQuery.of(context).size.height - buildAppBar(context).toolbarHeight!,
                 child: Column(
                   children: [
 
                     // Title input
-                    Container(
-                      color: Colors.cyan,
-                      width: double.infinity,
-                      height: 150,
-                      child:  Column(
-                        children: [
-                          TextField(
-                            controller: titleController,
-                            textInputAction: TextInputAction.next,
-                            style: TextStyle(fontSize: 50),
-                            decoration: const InputDecoration(
-
-                              hintText: 'Title',
-                              border: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              errorBorder: InputBorder.none,
-                              disabledBorder: InputBorder.none,
-
-                            ),
-
-                          ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: Text('Wednesday, August 7 | 03:02 PM', style: TextStyle(fontSize: 20),),
-                          ),
-                        ],
-                      ),
-                    ),
+                    TitleInputWidget(titleController: titleController, context: context, noteFocusNode: _noteFocusNode, titleFocusNode: _titleFocusNode, formattedTime: formattedTime),
 
                     // Note input
-                    Expanded(
-                      child: Container(
-                        color: Colors.blueGrey,
-                        width: double.infinity,
-
-                        // height: 500,
-                        child:  TextField(
-                          focusNode: _noteFocusNode,
-                          controller: noteController,
-                          expands: true,
-                          maxLines: null,
-                          // focusNode: _noteFocusNode,
-                          decoration: const InputDecoration(
-
-                            hintText: 'Note',
-                            border: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            errorBorder: InputBorder.none,
-                            disabledBorder: InputBorder.none,
-
-                          ),
-                        ),
-                      ),
-                    ),
+                    NoteInputWidget(noteFocusNode: _noteFocusNode, noteController: noteController),
                   ],
                 ),
               )
@@ -158,6 +125,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
       ),
     );
   }
+
 
   Padding buildNavigationBar(BuildContext context) {
     return Padding(
@@ -180,10 +148,10 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              IconButton(onPressed: () {}, icon: Icon(Icons.delete)),
-              IconButton(onPressed: () {}, icon: Icon(Icons.add)),
-              IconButton(onPressed: () {}, icon: Icon(Icons.share)),
-              IconButton(onPressed: () {}, icon: Icon(Icons.bookmark_border_outlined)),
+              // IconButton(onPressed: () {}, icon: Icon(Icons.delete)),
+              // IconButton(onPressed: () {}, icon: Icon(Icons.add)),
+              // IconButton(onPressed: () {}, icon: Icon(Icons.share)),
+              // IconButton(onPressed: () {}, icon: Icon(Icons.bookmark_border_outlined)),
 
 
             ],
@@ -193,6 +161,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   }
 
   AppBar buildAppBar(BuildContext context) {
+
     return AppBar(
         toolbarHeight: 100,
         leading: IconButton(
@@ -200,13 +169,20 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
           icon: Icon(Icons.arrow_back_ios_new),
           iconSize: 40,
         ),
-        // actions: [
-        //   IconButton(
-        //     onPressed: null,
-        //     icon: Icon(Icons.check),
-        //     iconSize: 50,
-        //   )
-        // ],
+        actions: [
+
+          ValueListenableBuilder<bool>(
+            valueListenable: isNoteValid,
+            builder: (context, value, child) {
+              return IconButton(
+                onPressed: isNoteValid.value ? submitNote : null,
+                icon: Icon(Icons.check, color: isNoteValid.value ? Colors.yellow : Colors.grey,),
+                iconSize: 50,
+              );
+            },
+
+          )
+        ],
       );
   }
 

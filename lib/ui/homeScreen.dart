@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:task_management/network/data/notes_provider.dart';
 import 'package:task_management/network/models/notes_model.dart';
 import 'package:task_management/ui/addNoteScreen.dart';
-import 'package:task_management/ui/noteDetailScreen.dart';
+import 'package:task_management/ui/note_detail_screen.dart';
 import 'package:task_management/widgets/appbar_action_widgets.dart';
 import 'package:task_management/widgets/list_tile.dart';
 import '../common/constants.dart';
@@ -89,14 +89,15 @@ class Homescreen extends StatelessWidget {
   }
 
   Widget TabletLayout() {
-    return Text("Implement to tablet....");
+    return const Text("Implement to tablet....");
   }
   Widget DesktopLayout() {
-    return Text("Implement to desktop and laptop....");
+    return const Text("Implement to desktop and laptop....");
   }
   Widget MobileLayout(BuildContext context) {
-    int notesLength = context.watch<NotesProvider>().notes.length;
-    List<NoteModel> allNotes = context.read<NotesProvider>().notes;
+
+    List<NoteModel> allNotes = context.watch<NotesProvider>().notes;
+    int notesLength = allNotes.length;
     return Container(
       // decoration: BoxDecoration(color: Colors.lightBlueAccent),
       width: double.infinity,
@@ -115,17 +116,50 @@ class Homescreen extends StatelessWidget {
                   String formattedTime = DateFormat('EEEE, MMMM d, hh:mm a').format(allNotes[index].time);
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: ListTileWidget(
-                        callback: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) =>  NoteDetailScreen(allNotes[index]))),
+                    child: GestureDetector(
+                      onLongPressStart: (details) {
+                        final tapPosition = details.globalPosition;
+                        print('long pressed');
+                        showMenu(
+                          context: context,
+                          position: RelativeRect.fromLTRB(
+                            tapPosition.dx,
+                            tapPosition.dy,
+                            MediaQuery.of(context).size.width - tapPosition.dx,
+                            MediaQuery.of(context).size.height - tapPosition.dy,
+                          ),
+                          items: [
+                            const PopupMenuItem<int>(
+                              value: 1,
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete),
+                                  SizedBox(width: 10),
+                                  Text("Delete"),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ).then((value) {
+                          if (value == 1) {
+                            context.read<NotesProvider>().deleteNote(
+                              allNotes[index],
+                            );
+                          }
+                        });
+                      },
+                      child: ListTileWidget(
+                        callback: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => NoteDetailScreen(index),
+                          ),
+                        ),
                         time: formattedTime,
-                      customColor: listItemColors[index % 6],
-                      title: allNotes[index].title,
-                      subtitle: formatSubtitle(allNotes[index].note),
-
-
-
-
-                    )
+                        customColor: listItemColors[index % 6],
+                        title: allNotes[index].title,
+                        subtitle: formatSubtitle(allNotes[index].note),
+                      ),
+                    ),
                   );
                 }),
           ),
@@ -139,14 +173,13 @@ class Homescreen extends StatelessWidget {
               behavior: HitTestBehavior.translucent,
               onTap: () {
 
-                print('tapped');
 
                 Navigator.push(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) => AddNoteScreen(),
+                    pageBuilder: (context, animation, secondaryAnimation) => const AddNoteScreen(),
                     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                      var begin = Offset(1.0, 0.0);
+                      var begin = const Offset(1.0, 0.0);
                       var end = Offset.zero;
                       var curve = Curves.ease;
 
@@ -161,9 +194,9 @@ class Homescreen extends StatelessWidget {
                   ),
                 );
               },
-              child:  CircleAvatar(
+              child:  const CircleAvatar(
                 radius: 30,
-                child: Icon(Icons.add),),
+                child: Icon(Icons.add, semanticLabel: 'Add Note',),),
             ),
           ),
 
@@ -174,7 +207,7 @@ class Homescreen extends StatelessWidget {
             child:
             InkWell(
               onTap: () {},
-              child: CircleAvatar(
+              child: const CircleAvatar(
                 radius: 30,
                 child: Icon(Icons.search),),
             ),
@@ -187,7 +220,7 @@ class Homescreen extends StatelessWidget {
             child:
             InkWell(
               onTap: () {},
-              child: CircleAvatar(
+              child: const CircleAvatar(
                 radius: 30,
                 child: Icon(Icons.person),),
             ),

@@ -11,11 +11,11 @@ Why I Created this project
 
 Provider Types Exists in Provider Package
  - FutureProvider
- - ValueListenableBuilder + Provider
+ - ValueListenableBuilder + Provider = could be useful in Themes(Dark Mode)
  - ListenableProvider
  - ListenableProxyProvider
  - Provider
- - ChangeNotifierProvider
+ - ChangeNotifierProvider = data
  - ProxyProvider0 upto ProxyProvider10
  - MultiProvider
  - ChangeNotifierProxyProvider
