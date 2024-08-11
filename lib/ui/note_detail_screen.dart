@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/network/data/notes_provider.dart';
-import 'package:task_management/network/models/notes_model.dart';
+import 'package:task_management/network/models/NoteModel.dart';
 import 'package:task_management/widgets/note_input_widget.dart';
 import 'package:task_management/widgets/title_input_widget.dart';
 

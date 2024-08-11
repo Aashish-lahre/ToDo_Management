@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/network/data/notes_provider.dart';
-import 'package:task_management/network/models/notes_model.dart';
+import 'package:task_management/network/models/NoteModel.dart';
 import 'package:task_management/ui/note_detail_screen.dart';
 
 import '../widgets/note_input_widget.dart';
@@ -97,7 +97,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   }
 
 
-  void submitNote(int index) {
+  Future<void> submitNote(int index) async {
 
     if(index != -1) {
       print('editing now...');
@@ -114,7 +114,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
           note: noteController.text,
           bookmarked: false);
 
-      thisNoteIndex = context.read<NotesProvider>().addNoteReturnIndex(newNote);
+      thisNoteIndex = await context.read<NotesProvider>().addNoteReturnIndex(newNote);
 
 
 

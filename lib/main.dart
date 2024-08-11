@@ -1,13 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/network/data/notes_provider.dart';
+import 'package:task_management/network/models/NoteModel.dart';
 import 'package:task_management/ui/homeScreen.dart';
 
-void main() {
-  runApp( ChangeNotifierProvider(
-      create: (context) => NotesProvider(),
-      child: MyApp()));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  Hive.registerAdapter(NoteModelAdapter());
+  // var box = await Hive.openBox<NoteModel>('NoteModelBox');
+  // box.clear();
+  // print('box : ${box.length}');
+  // NoteModel dummyNote = NoteModel(title: 'name', note: 'ashish lahre', bookmarked: false);
+  // var box = await Hive.openBox<NoteModel>('NoteModelBox');
+  // box.add(dummyNote);
+  // print('local stored value : ${box.values.last.note}');
+  runApp(
+    ChangeNotifierProvider(
+            create: (context) => NotesProvider(),
+            child: MyApp(),
+          ),);
+
 }
+
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

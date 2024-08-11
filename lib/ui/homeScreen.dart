@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/network/data/notes_provider.dart';
-import 'package:task_management/network/models/notes_model.dart';
+import 'package:task_management/network/models/NoteModel.dart';
 import 'package:task_management/ui/addNoteScreen.dart';
 import 'package:task_management/ui/note_detail_screen.dart';
 import 'package:task_management/widgets/appbar_action_widgets.dart';
@@ -94,9 +94,9 @@ class Homescreen extends StatelessWidget {
   Widget DesktopLayout() {
     return const Text("Implement to desktop and laptop....");
   }
-  Widget MobileLayout(BuildContext context) {
+  Widget MobileLayout(BuildContext context)  {
 
-    List<NoteModel> allNotes = context.watch<NotesProvider>().notes;
+    List<NoteModel> allNotes =  context.watch<NotesProvider>().notes;
     int notesLength = allNotes.length;
     return Container(
       // decoration: BoxDecoration(color: Colors.lightBlueAccent),

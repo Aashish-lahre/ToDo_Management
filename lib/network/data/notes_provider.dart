@@ -1,57 +1,84 @@
 import 'package:flutter/material.dart';
-import 'package:task_management/network/models/notes_model.dart';
+import 'package:hive/hive.dart';
+import 'package:task_management/network/models/NoteModel.dart';
+
+import 'notes_repository.dart';
 
 class NotesProvider with ChangeNotifier {
-  final List<NoteModel> _notes = [];
+
+  final NotesRepository _repository = NotesRepository();
+  List<NoteModel> _notes = [];
+
+  NotesProvider() {
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    await fetchNotes();
+  }
 
   List<NoteModel> get notes {
     return _notes;
   }
 
+  Future<void> fetchNotes() async {
+    _notes = await _repository.getNotes();
+    notifyListeners();
+  }
+
+
+
   int get notes_length {
     return _notes.length;
   }
 
-  void addNote(NoteModel newNote) {
-    print('new note added');
-    _notes.add(newNote);
-    print('notes length : ${notes.length}');
-    notifyListeners();
+  Future<void> addNote(NoteModel newNote) async {
+
+    await _repository.addNote(newNote);
+    await fetchNotes();
+    // notifyListeners();
   }
 
-  int addNoteReturnIndex(NoteModel newNote) {
-    _notes.add(newNote);
-    notifyListeners();
+  Future<int> addNoteReturnIndex(NoteModel newNote) async {
+    await addNote(newNote);
     return _notes.indexOf(newNote);
   }
 
-  void deleteNote(int index) {
+  Future<void> deleteNote(int index) async {
 
-    _notes.removeAt(index);
-    notifyListeners();
+    // _notes.removeAt(index);
+    await _repository.deleteNote(index);
+    await fetchNotes();
+    // notifyListeners();
   }
 
-  void editNote(NoteModel previousNote, NoteModel newNote) {
+  Future<void> editNote(NoteModel previousNote, NoteModel newNote) async {
     // keep the old version
     // add the new version of this note and show the new version
     int index = _notes.indexOf(previousNote);
     if (index != -1) {
 
-      _notes[index] = newNote;
+      // _notes[index] = newNote;
+      await _repository.editNote(index, newNote);
+      await fetchNotes();
     }
-    notifyListeners();
+    // notifyListeners();
   }
 
-  void editBookmark(NoteModel note, bool newBookmarkStatus) {
+  Future<void> editBookmark(NoteModel note, bool newBookmarkStatus) async {
     // Find the index of the note in the list
     int index = _notes.indexOf(note);
     print('note index- : $index');
     if (index != -1) {
       // Flip the bool in the bookmark property
-      _notes[index].bookmarked = newBookmarkStatus;
+      // _notes[index].bookmarked = newBookmarkStatus;
+      NoteModel newNote = note;
+      newNote.bookmarked = newBookmarkStatus;
+      await _repository.editNote(index, newNote);
+      await fetchNotes();
     }
     print('note bookmark : ${_notes[index].bookmarked}');
-    notifyListeners();
+    // notifyListeners();
   }
 
 
