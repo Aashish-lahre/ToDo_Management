@@ -21,16 +21,14 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late TextEditingController titleController;
   late TextEditingController noteController;
   Color navBg = Colors.lightGreen;
-  late List<NoteModel> notes;
+  // late List<NoteModel> notes;
   late NoteModel note;
-  bool isEditingMode = false;
-  final ValueNotifier<bool> isNoteValid = ValueNotifier<bool>(true);
+  late NotesProvider noteProvider;
 
-  void setEditingMode() {
-    setState(() {
-      isEditingMode = true;
-    });
-  }
+  final ValueNotifier<bool> isNoteValid = ValueNotifier<bool>(true);
+  final ValueNotifier<bool> isEditing = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isBookmark =  ValueNotifier<bool>(false);
+
 
   bool checkForValidNote() {
     if (titleController.text.trim().isNotEmpty ||
@@ -44,16 +42,16 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   }
 
   void submitNote() {
-    note.title = titleController.text;
-    note.note = noteController.text;
-    note.time = DateTime.now();
-    context.read<NotesProvider>().editNote(note);
+    NoteModel newNote = NoteModel(
+        title: titleController.text,
+        note: noteController.text,
+        bookmarked: note.bookmarked);
+    context.read<NotesProvider>().editNote(note, newNote);
+    isEditing.value = false;
+    titleFocusNode.unfocus();
+    noteFocusNode.unfocus();
   }
 
-  void recreateDetailScreen() {
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (context) => NoteDetailScreen(widget.noteIndex)));
-  }
 
   @override
   void initState() {
@@ -62,23 +60,34 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
     titleFocusNode.addListener(() {
       if (titleFocusNode.hasFocus) {
-        setEditingMode();
+        isEditing.value = true;
       }
     });
 
     noteFocusNode.addListener(() {
       if (noteFocusNode.hasFocus) {
-        setEditingMode();
+        isEditing.value = true;
       }
     });
+    noteProvider = context.read<NotesProvider>();
+    isBookmark.value = noteProvider.notes[widget.noteIndex].bookmarked;
+    // noteProvider.addListener(() {
+    //   if(noteProvider.notes_length >= widget.noteIndex) {
+    //
+    //     // Navigator.of(context).pop();
+    //   isBookmark.value = noteProvider.notes[widget.noteIndex].bookmarked;
+    //   }
+    //
+    //
+    //
+    // });
 
+
+
+    note = noteProvider.notes[widget.noteIndex];
+    titleController.text = note.title;
+    noteController.text = note.note;
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      notes = context.read<NotesProvider>().notes;
-      note = notes[widget.noteIndex];
-      titleController.text = note.title;
-      noteController.text = note.note;
-    });
   }
 
   @override
@@ -86,21 +95,22 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     titleController.dispose();
     noteController.dispose();
     noteFocusNode.dispose();
+    titleFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // notesLength = context.watch<NotesProvider>().notes_length;
-    notes = context.watch<NotesProvider>().notes;
 
-    if (notes.length <= widget.noteIndex) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-      );
-    }
+    // notes = context.watch<NotesProvider>().notes;
+    //
+    // if (notes.length <= widget.noteIndex) {
+    //   return const Scaffold(
+    //     backgroundColor: Colors.black,
+    //   );
+    // }
 
-    note = notes[widget.noteIndex];
+    // note = notes[widget.noteIndex];
 
     String formattedTime =
         DateFormat('EEEE, MMMM d, hh:mm a').format(note.time);
@@ -108,6 +118,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (checkForValidNote()) {
+          // &&  (titleFocusNode.hasFocus || noteFocusNode.hasFocus)
           submitNote();
           titleController.clear();
           noteController.clear();
@@ -121,7 +132,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       },
       child: SafeArea(
           child: Scaffold(
-        appBar: buildAppBar(context, note.bookmarked),
+        appBar: buildAppBar(context),
         body: Column(
           children: [
             TitleInputWidget(
@@ -139,7 +150,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     );
   }
 
-  AppBar buildAppBar(BuildContext context, bool isBookmarked) {
+  AppBar buildAppBar(BuildContext context) {
     return AppBar(
       toolbarHeight: 100,
       leading: IconButton(
@@ -148,34 +159,48 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         iconSize: 40,
       ),
       actions: [
-        !isEditingMode
-            ? IconButton(
-                onPressed: () {
-                  context.read<NotesProvider>().editBookmark(note);
-                },
-                icon: Icon(isBookmarked
-                    ? Icons.bookmark
-                    : Icons.bookmark_border_outlined),
-                iconSize: 50,
-              )
-            : ValueListenableBuilder<bool>(
-                valueListenable: isNoteValid,
-                builder: (context, value, child) {
-                  return IconButton(
-                    onPressed: isNoteValid.value
-                        ? () {
-                            submitNote();
-                            recreateDetailScreen();
-                          }
-                        : null,
-                    icon: Icon(
-                      Icons.check,
-                      color: isNoteValid.value ? Colors.yellow : Colors.grey,
-                    ),
-                    iconSize: 50,
-                  );
-                },
-              )
+        ValueListenableBuilder<bool>(
+          valueListenable: isEditing,
+          builder: (context, value, child) {
+            return value
+                ? ValueListenableBuilder<bool>(
+                    valueListenable: isNoteValid,
+                    builder: (context, value, child) {
+                      return IconButton(
+                        onPressed: isNoteValid.value
+                            ? () {
+                                submitNote();
+
+                              }
+                            : null,
+                        icon: Icon(
+                          Icons.check,
+                          color:
+                              isNoteValid.value ? Colors.yellow : Colors.grey,
+                        ),
+                        iconSize: 50,
+                      );
+                    },
+                  )
+                : ValueListenableBuilder<bool>(
+              valueListenable: isBookmark,
+                  builder: (context, value, child) {
+                return IconButton(
+                  onPressed: () {
+                    context
+                        .read<NotesProvider>()
+                        .editBookmark(note, !value);
+                  },
+                  icon: Icon(value
+                      ? Icons.bookmark
+                      : Icons.bookmark_border_outlined),
+                  iconSize: 50,
+                );
+                  },
+
+                );
+          },
+        ),
       ],
     );
   }
@@ -197,17 +222,22 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         ),
         width: double.infinity,
         height: 60,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            if (!isEditingMode)
-              IconButton(
-                  onPressed: () {
-                    context.read<NotesProvider>().deleteNote(note);
-                    Navigator.of(context).pop();
-                  },
-                  icon: const Icon(Icons.delete)),
-          ],
+        child: ValueListenableBuilder(
+          valueListenable: isEditing,
+          builder: (context, value, child) {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                if (!value)
+                  IconButton(
+                      onPressed: () {
+                        context.read<NotesProvider>().deleteNote(widget.noteIndex);
+                        Navigator.of(context).pop();
+                      },
+                      icon: const Icon(Icons.delete)),
+              ],
+            );
+          },
         ),
       ),
     );

@@ -143,7 +143,7 @@ class Homescreen extends StatelessWidget {
                         ).then((value) {
                           if (value == 1) {
                             context.read<NotesProvider>().deleteNote(
-                              allNotes[index],
+                              index,
                             );
                           }
                         });
