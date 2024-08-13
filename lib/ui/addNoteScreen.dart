@@ -124,13 +124,13 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
 
 
     // Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => NoteDetailScreen(index - 1)));
-    isEditing.value = false;
+
     _titleFocusNode.unfocus();
     _noteFocusNode.unfocus();
     setState(() {
       // isEditing = false;
       thisNoteIndex = thisNoteIndex;
-
+      isEditing.value = false;
       // print('index is : $thisNoteIndex');
     });
   }
@@ -166,7 +166,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
       },
       child: SafeArea(
         child: Scaffold(
-          backgroundColor: Colors.black,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           resizeToAvoidBottomInset: true,
           appBar: buildAppBar(context),
           body: ListView(
@@ -206,7 +206,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
       child: Container(
         margin: EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: nav_bg.withOpacity(0.8),
+          color: Theme.of(context).colorScheme.onSecondary,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
@@ -246,6 +246,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
         onPressed: () => Navigator.of(context).pop(),
         icon: Icon(Icons.arrow_back_ios_new),
         iconSize: 40,
+        color: Theme.of(context).iconTheme.color,
       ),
       actions: [
         ValueListenableBuilder(valueListenable: isEditing,
@@ -261,7 +262,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                 } : null,
                 icon: Icon(
                   Icons.check,
-                  color: isNoteValid.value ? Colors.yellow : Colors.grey,
+                  color: isNoteValid.value ? Colors.orange : Colors.grey,
                 ),
                 iconSize: 50,
               );
@@ -286,6 +287,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                     ? Icons.bookmark
                     : Icons.bookmark_border_outlined : Icons.bookmark_border_outlined),
                 iconSize: 50,
+                color: Theme.of(context).iconTheme.color,
               );
 
           });

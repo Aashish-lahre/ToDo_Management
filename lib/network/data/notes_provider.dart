@@ -9,6 +9,7 @@ class NotesProvider with ChangeNotifier {
   final NotesRepository _repository = NotesRepository();
   List<NoteModel> _notes = [];
 
+
   NotesProvider() {
     _initialize();
   }
@@ -21,10 +22,29 @@ class NotesProvider with ChangeNotifier {
     return _notes;
   }
 
+
+
   Future<void> fetchNotes() async {
+    print('executed');
     _notes = await _repository.getNotes();
     notifyListeners();
   }
+
+  // Future<void> fetchNotes() async {
+  //   print('executed');
+  //   List<NoteModel>' box = await _repository.getNotes();
+  //   _notes = box.values.toList();
+  //   if(box.isNotEmpty) {
+  //     for(int i= 0; i < box.length; i++) {
+  //       _mapNotes[i] = box.values.toList()[i];
+  //     }
+  //   } else{
+  //     _mapNotes = {};
+  //   }
+  //
+  //
+  //   notifyListeners();
+  // }
 
 
 
@@ -68,7 +88,7 @@ class NotesProvider with ChangeNotifier {
   Future<void> editBookmark(NoteModel note, bool newBookmarkStatus) async {
     // Find the index of the note in the list
     int index = _notes.indexOf(note);
-    print('note index- : $index');
+    print('note index : $index');
     if (index != -1) {
       // Flip the bool in the bookmark property
       // _notes[index].bookmarked = newBookmarkStatus;
@@ -77,7 +97,7 @@ class NotesProvider with ChangeNotifier {
       await _repository.editNote(index, newNote);
       await fetchNotes();
     }
-    print('note bookmark : ${_notes[index].bookmarked}');
+    // print('note bookmark : ${_notes[index].bookmarked}');
     // notifyListeners();
   }
 

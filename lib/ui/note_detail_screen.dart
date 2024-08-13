@@ -9,6 +9,7 @@ import 'package:task_management/widgets/title_input_widget.dart';
 class NoteDetailScreen extends StatefulWidget {
   final int noteIndex;
 
+
   const NoteDetailScreen(this.noteIndex, {super.key});
 
   @override
@@ -42,6 +43,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   }
 
   void submitNote() {
+
     NoteModel newNote = NoteModel(
         title: titleController.text,
         note: noteController.text,
@@ -71,16 +73,28 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     });
     noteProvider = context.read<NotesProvider>();
     isBookmark.value = noteProvider.notes[widget.noteIndex].bookmarked;
-    // noteProvider.addListener(() {
-    //   if(noteProvider.notes_length >= widget.noteIndex) {
-    //
-    //     // Navigator.of(context).pop();
-    //   isBookmark.value = noteProvider.notes[widget.noteIndex].bookmarked;
-    //   }
-    //
-    //
-    //
-    // });
+    noteProvider.addListener(() {
+      // print('entered add listener');
+      // if(noteProvider.notes_length > widget.noteIndex) {
+      //   print('notes length is more the index');
+      //   // Navigator.of(context).pop();
+      //   try{
+      //
+      //   } on RangeError {
+      //     print('error caught here in add listener');
+      //   }
+      // }
+      //
+
+      if(noteProvider.notes.elementAtOrNull(widget.noteIndex) != null) {
+        print('note exists');
+        note = noteProvider.notes[widget.noteIndex];
+        isBookmark.value = note.bookmarked;
+
+      }
+
+
+    });
 
 
 
@@ -102,15 +116,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   @override
   Widget build(BuildContext context) {
 
-    // notes = context.watch<NotesProvider>().notes;
-    //
-    // if (notes.length <= widget.noteIndex) {
-    //   return const Scaffold(
-    //     backgroundColor: Colors.black,
-    //   );
-    // }
 
-    // note = notes[widget.noteIndex];
 
     String formattedTime =
         DateFormat('EEEE, MMMM d, hh:mm a').format(note.time);
@@ -119,7 +125,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       onPopInvokedWithResult: (didPop, result) {
         if (checkForValidNote()) {
           // &&  (titleFocusNode.hasFocus || noteFocusNode.hasFocus)
-          submitNote();
+          if(isEditing.value) {
+            submitNote();
+          }
+
           titleController.clear();
           noteController.clear();
         }
@@ -157,8 +166,12 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         onPressed: () => Navigator.of(context).pop(),
         icon: const Icon(Icons.arrow_back_ios_new),
         iconSize: 40,
+        color: Theme.of(context).iconTheme.color,
       ),
+
+
       actions: [
+
         ValueListenableBuilder<bool>(
           valueListenable: isEditing,
           builder: (context, value, child) {
@@ -167,8 +180,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                     valueListenable: isNoteValid,
                     builder: (context, value, child) {
                       return IconButton(
-                        onPressed: isNoteValid.value
+                        onPressed: value
                             ? () {
+                          print('note is valid');
                                 submitNote();
 
                               }
@@ -185,8 +199,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 : ValueListenableBuilder<bool>(
               valueListenable: isBookmark,
                   builder: (context, value, child) {
+                print('bookmark called or value changed');
                 return IconButton(
                   onPressed: () {
+                    print('this should visible when pressed');
                     context
                         .read<NotesProvider>()
                         .editBookmark(note, !value);
@@ -195,6 +211,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       ? Icons.bookmark
                       : Icons.bookmark_border_outlined),
                   iconSize: 50,
+                  color: Theme.of(context).iconTheme.color,
                 );
                   },
 
@@ -211,11 +228,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       child: Container(
         margin: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: navBg.withOpacity(0.8),
+          color: Theme.of(context).colorScheme.onSecondary,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-                color: navBg.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                 offset: const Offset(0, 20),
                 blurRadius: 20),
           ],

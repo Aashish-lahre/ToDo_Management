@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-const double titleSize = 50;
+const double titleSize = 40;
 
  Color buttonColor =  Colors.grey.shade200;
 

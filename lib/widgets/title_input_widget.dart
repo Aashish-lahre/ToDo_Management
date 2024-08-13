@@ -20,22 +20,30 @@ class TitleInputWidget extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return Container(
-      color: Colors.cyan,
+      // duration: const Duration(milliseconds: 100),
+      color: Theme.of(context).colorScheme.onPrimary,
       width: double.infinity,
-      height: 150,
+      // height: 150,
       child:  Column(
         children: [
           TextField(
+            cursorColor: Theme.of(context).colorScheme.secondary, // Set the cursor color to a visible color
+            cursorWidth: 2.0, // Adjust the cursor width if needed
+            cursorRadius: Radius.circular(2.0), // Make the cursor slightly rounded
+            maxLength: 50,
             controller: titleController,
             focusNode: titleFocusNode,
             textInputAction: TextInputAction.next,
-            style: const TextStyle(fontSize: 50),
+            style: Theme.of(context).textTheme.titleLarge,
             onSubmitted: (_) {
               FocusScope.of(context).requestFocus(noteFocusNode);
             },
+            maxLines: null,
             decoration:  InputDecoration(
 
               hintText: titleController.text.isEmpty ? 'Title' : null,
+              hintStyle: Theme.of(context).textTheme.titleLarge,
+
               border: InputBorder.none,
               focusedBorder: InputBorder.none,
               enabledBorder: InputBorder.none,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
+import 'package:task_management/common/themes.dart';
 import 'package:task_management/network/data/notes_provider.dart';
 import 'package:task_management/network/models/NoteModel.dart';
 import 'package:task_management/ui/homeScreen.dart';
@@ -36,12 +37,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home:  Homescreen(),
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: ThemeMode.system,
+      // ThemeData(
+      //
+      //   colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      //   useMaterial3: true,
+      // ),
+      home:  HomeScreen(),
     );
   }
 }
