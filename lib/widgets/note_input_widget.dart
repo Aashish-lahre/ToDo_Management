@@ -31,6 +31,7 @@ class NoteInputWidget extends StatelessWidget {
           decoration:  InputDecoration(
 
             hintText: noteController.text.isEmpty ? "Note" : null,
+            hintStyle: TextStyle(color: Theme.of(context).colorScheme.secondary),
             border: InputBorder.none,
             focusedBorder: InputBorder.none,
             enabledBorder: InputBorder.none,

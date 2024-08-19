@@ -6,6 +6,9 @@ import 'package:task_management/network/models/NoteModel.dart';
 import 'package:task_management/widgets/note_input_widget.dart';
 import 'package:task_management/widgets/title_input_widget.dart';
 
+import '../widgets/EditingNavigationButtons.dart';
+import '../widgets/navigationBarButtons.dart';
+
 class NoteDetailScreen extends StatefulWidget {
   final int noteIndex;
 
@@ -28,6 +31,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
   final ValueNotifier<bool> isNoteValid = ValueNotifier<bool>(true);
   final ValueNotifier<bool> isEditing = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isEditingTitle = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isBookmark =  ValueNotifier<bool>(false);
 
 
@@ -50,6 +54,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         bookmarked: note.bookmarked);
     context.read<NotesProvider>().editNote(note, newNote);
     isEditing.value = false;
+    isEditingTitle.value = false;
     titleFocusNode.unfocus();
     noteFocusNode.unfocus();
   }
@@ -63,12 +68,14 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     titleFocusNode.addListener(() {
       if (titleFocusNode.hasFocus) {
         isEditing.value = true;
+        isEditingTitle.value = true;
       }
     });
 
     noteFocusNode.addListener(() {
       if (noteFocusNode.hasFocus) {
         isEditing.value = true;
+        isEditingTitle.value = false;
       }
     });
     noteProvider = context.read<NotesProvider>();
@@ -87,7 +94,6 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       //
 
       if(noteProvider.notes.elementAtOrNull(widget.noteIndex) != null) {
-        print('note exists');
         note = noteProvider.notes[widget.noteIndex];
         isBookmark.value = note.bookmarked;
 
@@ -154,7 +160,26 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 noteFocusNode: noteFocusNode, noteController: noteController)
           ],
         ),
-        bottomNavigationBar: buildNavigationBar(context),
+            bottomNavigationBar: ValueListenableBuilder(
+              valueListenable: isEditing,
+              builder: (context, isEditingValue, child) {
+                if (isEditingValue) {
+                  return ValueListenableBuilder(
+                    valueListenable: isEditingTitle,
+                    builder: (context, isEditingTitleValue, child) {
+                      if (isEditingTitleValue) {
+                        return const SizedBox.shrink();
+                      } else {
+                        return const EditingNavigationButtons();
+                      }
+                    },
+                  );
+                } else {
+                  return  NavigationBarButtons(thisNoteIndex: widget.noteIndex,);
+                }
+              },
+              // child: buildNavigationBar(context),
+            ),
       )),
     );
   }

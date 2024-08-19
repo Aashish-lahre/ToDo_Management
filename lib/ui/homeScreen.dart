@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/network/data/notes_provider.dart';
 import 'package:task_management/network/models/NoteModel.dart';
-import 'package:task_management/ui/addNoteScreen.dart';
+import 'package:task_management/ui/add_note_screen.dart';
 import 'package:task_management/ui/note_detail_screen.dart';
 import 'package:task_management/widgets/appbar_action_widgets.dart';
 import 'package:task_management/widgets/close_search_container.dart';
@@ -24,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final FocusNode searchFocusNode = FocusNode();
   bool isCustomColor = false;
   late double _keyboardHeight;
+
   void openDrawer(bool flag) {
     // true --> open Drawer
     // false --> close Drawer
@@ -63,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-
+    final screenSize = MediaQuery.of(context).size;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       // backgroundColor: Colors.black,
@@ -78,69 +79,94 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           }
           if(constraints.maxWidth < 600) {
 
-            return buildMobileLayout(context, constraints);
+            return buildMobileLayout(context, constraints, screenSize);
           }
 
           return const Center(child: Text('Layout builder constraint problem'),);
 
         },
       ),
-      bottomNavigationBar: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // bottom Navigation
-          AnimatedContainer(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            margin: EdgeInsets.only(bottom: 15),
-            duration: const Duration(milliseconds: 100),
+      bottomNavigationBar: buildNavigationBar(context, screenSize),
+    );
+  }
 
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: Theme.of(context).colorScheme.primary,
-            ),
+  Row buildNavigationBar(BuildContext context, Size screenSize) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // bottom Navigation
+        AnimatedContainer(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          margin: const EdgeInsets.only(bottom: 15),
+          duration: const Duration(milliseconds: 100),
 
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                InkWell(
-                  onTap: () {},
-                  child: CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.onPrimary,
-                    radius: 30,
-                    child: Icon(Icons.home, color: Theme.of(context).iconTheme.color,),
-                  ),
-                ),
-                InkWell(
-                  onTap: () {},
-                  child: CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.onPrimary,
-                    radius: 30,
-                    child: Icon(Icons.person, color: Theme.of(context).iconTheme.color,),
-                  ),
-                ),
-                InkWell(
-                  onTap: () {isSearching.value = true;},
-                  child: CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.onPrimary,
-                    radius: 30,
-                    child: Icon(Icons.search, color: Theme.of(context).iconTheme.color,),
-                  ),
-                ),
-                InkWell(
-                  onTap: () => onAddNotePress(context),
-                  child: CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.onPrimary,
-                    radius: 30,
-                    child: Icon(Icons.add, color: Theme.of(context).iconTheme.color,),
-                  ),
-                ),
-
-              ],
-            ),
-
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: Theme.of(context).colorScheme.primary,
           ),
-        ],
-      ),
+
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              InkWell(
+                onTap: () {},
+                child: CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.onPrimary,
+                  radius: 30,
+                  child: Icon(Icons.home, color: Theme.of(context).iconTheme.color,),
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  final snackBar = SnackBar(
+                    content:
+                    // Container(
+                    //   // width: screenSize.width * .3,
+                    //   padding: const EdgeInsets.all(10),
+                    //   height: 50,
+                    //   decoration: BoxDecoration(
+                    //     color: Colors.red.shade300,
+                    //     borderRadius: BorderRadius.circular(30),
+                    //   ),
+                    //   child: const Text('Profile Coming Soon...'),
+                    // ),
+                    const Text('Profile coming soon...', style: TextStyle(color: Colors.white),),
+                    width: screenSize.width * .6,
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: Colors.grey.shade800,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  );
+
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                },
+                child: CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.onPrimary,
+                  radius: 30,
+                  child: Icon(Icons.person, color: Theme.of(context).iconTheme.color,),
+                ),
+              ),
+              InkWell(
+                onTap: () {isSearching.value = true;},
+                child: CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.onPrimary,
+                  radius: 30,
+                  child: Icon(Icons.search, color: Theme.of(context).iconTheme.color,),
+                ),
+              ),
+              InkWell(
+                onTap: () => onAddNotePress(context),
+                child: CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.onPrimary,
+                  radius: 30,
+                  child: Icon(Icons.add, color: Theme.of(context).iconTheme.color,),
+                ),
+              ),
+
+            ],
+          ),
+
+        ),
+      ],
     );
   }
 
@@ -178,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return const Text("Implement to desktop and laptop....");
   }
 
-  Widget buildMobileLayout(BuildContext context, BoxConstraints constraints)  {
+  Widget buildMobileLayout(BuildContext context, BoxConstraints constraints, Size screenSize)  {
 
     List<NoteModel> allNotes =  context.watch<NotesProvider>().notes;
     int notesLength = allNotes.length;
@@ -226,13 +252,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           // decoration: const BoxDecoration(color: Colors.lightBlueAccent),
           width: double.infinity,
           height:  constraints.maxHeight * .9,
-          child:  buildNotesListViewWidget(notesLength, allNotes),
+          child:  buildNotesListViewWidget(notesLength, allNotes, screenSize),
         ),
       ],
     );
   }
 
-  ListView buildNotesListViewWidget(int notesLength, List<NoteModel> allNotes) {
+  ListView buildNotesListViewWidget(int notesLength, List<NoteModel> allNotes, Size screenSize) {
+
     return ListView.builder(
                 itemCount: notesLength,
                 itemBuilder: (context, index) {
@@ -249,16 +276,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           position: RelativeRect.fromLTRB(
                             tapPosition.dx,
                             tapPosition.dy,
-                            MediaQuery.of(context).size.width - tapPosition.dx,
-                            MediaQuery.of(context).size.height - tapPosition.dy,
+                            screenSize.width - tapPosition.dx,
+                            screenSize.height - tapPosition.dy,
                           ),
                           items: [
                              PopupMenuItem<int>(
                               value: 1,
                               child: Row(
                                 children: [
-                                  Icon(Icons.delete),
-                                  SizedBox(width: 10),
+                                  const Icon(Icons.delete),
+                                  const SizedBox(width: 10),
                                   Text("Delete", style: Theme.of(context).textTheme.bodyMedium,),
                                 ],
                               ),

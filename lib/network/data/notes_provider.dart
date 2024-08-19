@@ -8,7 +8,7 @@ class NotesProvider with ChangeNotifier {
 
   final NotesRepository _repository = NotesRepository();
   List<NoteModel> _notes = [];
-
+  bool notesAreReversed = true;
 
   NotesProvider() {
     _initialize();
@@ -27,6 +27,9 @@ class NotesProvider with ChangeNotifier {
   Future<void> fetchNotes() async {
     print('executed');
     _notes = await _repository.getNotes();
+    if(notesAreReversed) {
+      _notes = _notes.reversed.toList();
+    }
     notifyListeners();
   }
 
@@ -45,6 +48,13 @@ class NotesProvider with ChangeNotifier {
   //
   //   notifyListeners();
   // }
+
+  int getForwardIndexIfNotesReversed(int index) {
+    if(notesAreReversed) {
+      return notes_length - 1 - index;
+    }
+    return index;
+  }
 
 
 
@@ -66,7 +76,7 @@ class NotesProvider with ChangeNotifier {
 
   Future<void> deleteNote(int index) async {
 
-    // _notes.removeAt(index);
+    index = getForwardIndexIfNotesReversed(index);
     await _repository.deleteNote(index);
     await fetchNotes();
     // notifyListeners();
@@ -77,8 +87,7 @@ class NotesProvider with ChangeNotifier {
     // add the new version of this note and show the new version
     int index = _notes.indexOf(previousNote);
     if (index != -1) {
-
-      // _notes[index] = newNote;
+      index = getForwardIndexIfNotesReversed(index);
       await _repository.editNote(index, newNote);
       await fetchNotes();
     }
@@ -88,8 +97,9 @@ class NotesProvider with ChangeNotifier {
   Future<void> editBookmark(NoteModel note, bool newBookmarkStatus) async {
     // Find the index of the note in the list
     int index = _notes.indexOf(note);
-    print('note index : $index');
+
     if (index != -1) {
+      index = getForwardIndexIfNotesReversed(index);
       // Flip the bool in the bookmark property
       // _notes[index].bookmarked = newBookmarkStatus;
       NoteModel newNote = note;
