@@ -4,6 +4,7 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/common/themes.dart';
 import 'package:task_management/network/data/notes_provider.dart';
+import 'package:task_management/network/data/theme_provider.dart';
 import 'package:task_management/network/models/NoteModel.dart';
 import 'package:task_management/ui/homeScreen.dart';
 
@@ -19,14 +20,20 @@ void main() async {
   // box.add(dummyNote);
   // print('local stored value : ${box.values.last.note}');
   runApp(
-    ChangeNotifierProvider(
-            create: (context) => NotesProvider(),
-            child: MyApp(),
-          ),);
+    MultiProvider(
+      providers: [
 
+        ChangeNotifierProvider(create: (context) => ThemeProvider(),),
+
+        ChangeNotifierProvider(
+          create: (context) => NotesProvider(),
+
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
-
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -39,13 +46,13 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
       darkTheme: darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: context.watch<ThemeProvider>().themeMode,
       // ThemeData(
       //
       //   colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       //   useMaterial3: true,
       // ),
-      home:  HomeScreen(),
+      home: HomeScreen(),
     );
   }
 }

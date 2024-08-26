@@ -21,7 +21,7 @@ class TitleInputWidget extends StatelessWidget {
 
     return Container(
       // duration: const Duration(milliseconds: 100),
-      color: Theme.of(context).colorScheme.onPrimary,
+      // color: Theme.of(context).colorScheme.onPrimary,
       width: double.infinity,
       // height: 150,
       child:  Column(
@@ -34,7 +34,7 @@ class TitleInputWidget extends StatelessWidget {
             controller: titleController,
             focusNode: titleFocusNode,
             textInputAction: TextInputAction.next,
-            style: Theme.of(context).textTheme.titleLarge,
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize:25),
             onSubmitted: (_) {
               FocusScope.of(context).requestFocus(noteFocusNode);
             },

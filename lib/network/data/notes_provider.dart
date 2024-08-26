@@ -25,7 +25,7 @@ class NotesProvider with ChangeNotifier {
 
 
   Future<void> fetchNotes() async {
-    print('executed');
+
     _notes = await _repository.getNotes();
     if(notesAreReversed) {
       _notes = _notes.reversed.toList();
@@ -33,21 +33,7 @@ class NotesProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Future<void> fetchNotes() async {
-  //   print('executed');
-  //   List<NoteModel>' box = await _repository.getNotes();
-  //   _notes = box.values.toList();
-  //   if(box.isNotEmpty) {
-  //     for(int i= 0; i < box.length; i++) {
-  //       _mapNotes[i] = box.values.toList()[i];
-  //     }
-  //   } else{
-  //     _mapNotes = {};
-  //   }
-  //
-  //
-  //   notifyListeners();
-  // }
+
 
   int getForwardIndexIfNotesReversed(int index) {
     if(notesAreReversed) {

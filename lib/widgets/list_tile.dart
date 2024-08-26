@@ -25,7 +25,7 @@ class ListTileWidget extends StatelessWidget {
       children: [
         Text(
           subtitle.isEmpty ? " " : subtitle,
-          style: Theme.of(context).textTheme.bodyMedium,
+          // style: Theme.of(context).textTheme.bodyMedium,
           overflow: TextOverflow.ellipsis,
           maxLines: 1, // Adjust maxLines as needed
         ),
@@ -42,18 +42,28 @@ class ListTileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      onTap: callback,
-      tileColor: customColor,
-      title: title.isNotEmpty ? Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(overflow: TextOverflow.ellipsis)) : null,
-      subtitle: subtitleAndTime(context),
-      contentPadding: const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
-
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10), // Set the border radius here
-        side: const BorderSide(color: Colors.black, width: 1), // Optional: Add a border color and width
+    return Container(
+      decoration: BoxDecoration(
+        color: customColor,
+        borderRadius: BorderRadius.circular(18),
+        // border: Border.all(color: Colors.black, width: 1, style: BorderStyle.solid)
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: Theme.of(context).colorScheme.surface.withOpacity(.1),
+        //     offset: Offset(-4, 4),
+        //   ),
+        // ],
       ),
 
+      child: ListTile(
+        onTap: callback,
+        title: title.isNotEmpty ? Text(title) : null,
+        subtitle: subtitleAndTime(context),
+        contentPadding: const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
+
+      ),
     );
+
+
   }
 }

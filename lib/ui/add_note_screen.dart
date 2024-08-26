@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/network/data/notes_provider.dart';
 import 'package:task_management/network/models/NoteModel.dart';
-import 'package:task_management/widgets/EditingNavigationButtons.dart';
-import 'package:task_management/widgets/navigationBarButtons.dart';
+import 'package:task_management/widgets/editing_navigation_buttons.dart';
+import 'package:task_management/widgets/navigation_bar_buttons.dart';
 
 import '../widgets/note_input_widget.dart';
 import '../widgets/title_input_widget.dart';
@@ -16,7 +16,7 @@ class AddNoteScreen extends StatefulWidget {
   State<AddNoteScreen> createState() => _AddNoteScreenState();
 }
 
-class _AddNoteScreenState extends State<AddNoteScreen> {
+class _AddNoteScreenState extends State<AddNoteScreen> with WidgetsBindingObserver {
   final FocusNode _noteFocusNode = FocusNode();
   final FocusNode _titleFocusNode = FocusNode();
   late NotesProvider notesProvider;
@@ -32,6 +32,8 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   @override
   void initState() {
     super.initState();
+    // for running code before app terminates
+    WidgetsBinding.instance.addObserver(this);
     titleController = TextEditingController()
       ..addListener(checkForValidNote);
     noteController = TextEditingController()
@@ -63,6 +65,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _noteFocusNode.dispose();
     _titleFocusNode.dispose();
     titleController
@@ -141,13 +144,30 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
       thisNoteIndex = thisNoteIndex;
       isEditing.value = false;
       isEditingTitle.value = false;
-      // print('index is : $thisNoteIndex');
+
     });
+  }
+
+@override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+
+
+    if(state == AppLifecycleState.inactive) {
+      if(checkForValidNote()) {
+        submitNote(thisNoteIndex);
+      }
+    }
+
+
+
+
+    super.didChangeAppLifecycleState(state);
   }
 
 
   @override
   Widget build(BuildContext context) {
+    Size screenSize = MediaQuery.of(context).size;
     String formattedTime =
     DateFormat('EEEE, MMMM d, hh:mm a').format(DateTime.now());
 
@@ -185,9 +205,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
             children: [
               SizedBox(
                 width: double.infinity,
-                height: MediaQuery
-                    .of(context)
-                    .size
+                height: screenSize
                     .height -
                     buildAppBar(context).toolbarHeight!,
                 child: Column(
@@ -219,12 +237,12 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                     if (isEditingTitleValue) {
                       return const SizedBox.shrink();
                     } else {
-                      return const EditingNavigationButtons();
+                      return  EditingNavigationButtons(screenSize: screenSize,);
                     }
                   },
                 );
               } else {
-                return NavigationBarButtons(thisNoteIndex: thisNoteIndex,);
+                return NavigationBarButtons(thisNoteIndex: thisNoteIndex, screenSize: screenSize,);
               }
             },
             // child: buildNavigationBar(context),

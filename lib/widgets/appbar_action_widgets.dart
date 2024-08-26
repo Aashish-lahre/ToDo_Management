@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:task_management/common/constants.dart';
+import 'package:task_management/common/utility/scaffold_message.dart';
+
+import 'package:task_management/ui/settings/settings_screen.dart';
 
 List<Widget> getHomeScreenAppbarActionWidgets(BuildContext context) {
+  Size screenSize = MediaQuery.of(context).size;
   double _width = 40;
   double _height = 40;
+  Color containerColor = Theme.of(context).colorScheme.surface;
   return <Widget>[
     Container(
+
       width: _width,
       height: _height,
       decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
+        color: containerColor,
           borderRadius: BorderRadius.circular(10)),
-      child: Icon(
-        Icons.notifications,
-        color: Theme.of(context).iconTheme.color,
+      child:  IconButton(
+        onPressed: () => scaffoldMessage(message: 'Feature coming soon...',context: context ,screenSize:  screenSize),
+        icon: Icon(Icons.notifications),
+
       ),
     ),
-    SizedBox(
+    const SizedBox(
       width: 20,
     ),
     PopupMenuButton<int>(
@@ -24,32 +30,43 @@ List<Widget> getHomeScreenAppbarActionWidgets(BuildContext context) {
         width: _width,
         height: _height,
         decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
+            color: containerColor,
             borderRadius: BorderRadius.circular(10)),
-        child: Icon(
+        child: const Icon(
           Icons.more_vert,
-          color: Theme.of(context).iconTheme.color,
+
         ),
       ),
-      onSelected: (int value) {
-        print('selected : $value');
-      },
+      onSelected: (int value) => onClick(value, context, screenSize),
       itemBuilder: (context) {
         return [
-           PopupMenuItem<int>(
+           const PopupMenuItem<int>(
             value: 1,
-            child: Text('Settings', style: Theme.of(context).textTheme.bodyMedium,),
+            child: Text('Settings',
+              // style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ),
-           PopupMenuItem<int>(
+           const PopupMenuItem<int>(
             value: 2,
-            child: Text('Select', style: Theme.of(context).textTheme.bodyMedium,),
+            child: Text('Select',
+              // style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ),
-           PopupMenuItem<int>(
+           const PopupMenuItem<int>(
             value: 3,
-            child: Text('Sync', style: Theme.of(context).textTheme.bodyMedium,),
+            child: Text('Sync',
+              // style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ),
         ];
       },
     ),
   ];
+}
+
+void onClick(int value, BuildContext context, Size screenSize) {
+  if(value == 1) Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsScreen()));
+  if(value == 2) scaffoldMessage(message: 'Feature coming soon...', context: context, screenSize: screenSize);
+  if(value == 3) scaffoldMessage(message: 'Feature coming soon...', context: context, screenSize: screenSize);
+
 }

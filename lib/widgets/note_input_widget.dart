@@ -15,23 +15,23 @@ class NoteInputWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        color: Theme.of(context).colorScheme.onPrimary,
+        // color: Theme.of(context).colorScheme.onPrimary,
         width: double.infinity,
 
         // height: 500,
         child:  TextField(
-          cursorColor: Theme.of(context).colorScheme.secondary, // Set the cursor color to a visible color
+          cursorColor: Theme.of(context).colorScheme.onSurface, // Set the cursor color to a visible color
           cursorWidth: 2.0, // Adjust the cursor width if needed
           cursorRadius: Radius.circular(2.0), // Make the cursor slightly rounded
           focusNode: noteFocusNode,
           controller: noteController,
           expands: true,
           maxLines: null,
-          // focusNode: _noteFocusNode,
+          style: Theme.of(context).textTheme.titleMedium,
           decoration:  InputDecoration(
 
             hintText: noteController.text.isEmpty ? "Note" : null,
-            hintStyle: TextStyle(color: Theme.of(context).colorScheme.secondary),
+            hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             border: InputBorder.none,
             focusedBorder: InputBorder.none,
             enabledBorder: InputBorder.none,

@@ -24,7 +24,7 @@ class SearchWidget extends StatelessWidget {
               const SizedBox(width: 5,),
               Expanded(
                 child: TextField(
-                  cursorColor: Theme.of(context).colorScheme.secondary,
+                  cursorColor: Theme.of(context).colorScheme.onSurface,
                   focusNode: focusNode,
                   autofocus: true,
                   style: const TextStyle(

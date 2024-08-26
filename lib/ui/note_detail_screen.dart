@@ -6,8 +6,8 @@ import 'package:task_management/network/models/NoteModel.dart';
 import 'package:task_management/widgets/note_input_widget.dart';
 import 'package:task_management/widgets/title_input_widget.dart';
 
-import '../widgets/EditingNavigationButtons.dart';
-import '../widgets/navigationBarButtons.dart';
+import '../widgets/editing_navigation_buttons.dart';
+import '../widgets/navigation_bar_buttons.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   final int noteIndex;
@@ -81,17 +81,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     noteProvider = context.read<NotesProvider>();
     isBookmark.value = noteProvider.notes[widget.noteIndex].bookmarked;
     noteProvider.addListener(() {
-      // print('entered add listener');
-      // if(noteProvider.notes_length > widget.noteIndex) {
-      //   print('notes length is more the index');
-      //   // Navigator.of(context).pop();
-      //   try{
-      //
-      //   } on RangeError {
-      //     print('error caught here in add listener');
-      //   }
-      // }
-      //
+
 
       if(noteProvider.notes.elementAtOrNull(widget.noteIndex) != null) {
         note = noteProvider.notes[widget.noteIndex];
@@ -122,7 +112,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   @override
   Widget build(BuildContext context) {
 
-
+    final Size screenSize = MediaQuery.of(context).size;
 
     String formattedTime =
         DateFormat('EEEE, MMMM d, hh:mm a').format(note.time);
@@ -156,6 +146,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 noteFocusNode: noteFocusNode,
                 titleFocusNode: titleFocusNode,
                 formattedTime: formattedTime),
+             Divider(color: Theme.of(context).colorScheme.onSurface,),
             NoteInputWidget(
                 noteFocusNode: noteFocusNode, noteController: noteController)
           ],
@@ -170,12 +161,12 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       if (isEditingTitleValue) {
                         return const SizedBox.shrink();
                       } else {
-                        return const EditingNavigationButtons();
+                        return  EditingNavigationButtons(screenSize: screenSize,);
                       }
                     },
                   );
                 } else {
-                  return  NavigationBarButtons(thisNoteIndex: widget.noteIndex,);
+                  return  NavigationBarButtons(thisNoteIndex: widget.noteIndex, screenSize: screenSize,);
                 }
               },
               // child: buildNavigationBar(context),
@@ -191,7 +182,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         onPressed: () => Navigator.of(context).pop(),
         icon: const Icon(Icons.arrow_back_ios_new),
         iconSize: 40,
-        color: Theme.of(context).iconTheme.color,
+
       ),
 
 
@@ -207,7 +198,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       return IconButton(
                         onPressed: value
                             ? () {
-                          print('note is valid');
+
                                 submitNote();
 
                               }
@@ -224,10 +215,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 : ValueListenableBuilder<bool>(
               valueListenable: isBookmark,
                   builder: (context, value, child) {
-                print('bookmark called or value changed');
+
                 return IconButton(
                   onPressed: () {
-                    print('this should visible when pressed');
+
                     context
                         .read<NotesProvider>()
                         .editBookmark(note, !value);
@@ -236,7 +227,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       ? Icons.bookmark
                       : Icons.bookmark_border_outlined),
                   iconSize: 50,
-                  color: Theme.of(context).iconTheme.color,
+                  // color: Theme.of(context).iconTheme.color,
                 );
                   },
 
