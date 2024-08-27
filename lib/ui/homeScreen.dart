@@ -9,7 +9,7 @@ import 'package:task_management/ui/add_note_screen.dart';
 import 'package:task_management/ui/note_detail_screen.dart';
 import 'package:task_management/widgets/appbar_action_widgets.dart';
 import 'package:task_management/widgets/close_search_container.dart';
-import 'package:task_management/widgets/list_tile.dart';
+
 import 'package:task_management/widgets/search_widget.dart';
 import 'package:task_management/widgets/themedWidgets/themedIcon.dart';
 import '../common/constants.dart';
@@ -27,6 +27,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final FocusNode searchFocusNode = FocusNode();
   bool isCustomColor = false;
   late double _keyboardHeight;
+  bool isAppbarExpanded = true;
+  double expandedHeight = 180;
+  double collapsedHeight = 80;
+  double threshold = 50;
+  double heightDifference = 100;
+  late ScrollController scrollController;
+  bool scrollingViaUser = false;
 
   void openDrawer(bool flag) {
     // true --> open Drawer
@@ -37,12 +44,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     _keyboardHeight = 0;
+    scrollController = ScrollController(initialScrollOffset: 0);
     super.initState();
   }
 
   @override
   void dispose() {
     searchFocusNode.dispose();
+    scrollController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -61,13 +70,149 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.didChangeMetrics();
   }
 
+  bool handleScrollNotification(ScrollNotification notification) {
+    if (notification is UserScrollNotification) {
+      scrollingViaUser = true;
+    }
+
+    if (notification is ScrollEndNotification) {
+      print('scroll end notification global : ${notification.metrics.pixels}');
+
+      if (scrollingViaUser == true) {
+        print(
+            'scroll end notification only by user : ${notification.metrics.pixels}');
+        if (isAppbarExpanded) {
+          if (scrollController.offset <= threshold) {
+            print(
+                'scroll controller offset is less than or equal to threshold');
+            // scroll controller offset is less than or equal to threshold
+            // animate to 0
+            scrollingViaUser =
+                false; // to not execute this full if else code block when programmatically scrolling
+            Future.delayed(
+              Duration(milliseconds: 50),
+              () {
+                scrollController.animateTo(
+                  0,
+                  duration: Duration(milliseconds: 100),
+                  // curve: Curves.easeIn,
+                  curve: Curves.linear,
+                );
+              },
+            );
+          } else {
+            // more than threshold
+            if (scrollController.offset < heightDifference) {
+              // more than threshold but less than height difference
+              // animate to 100
+              scrollingViaUser =
+                  false; // to not execute this full if else code block when programmatically scrolling
+              Future.delayed(
+                Duration(milliseconds: 50),
+                () {
+                  scrollController.animateTo(
+                    expandedHeight - collapsedHeight,
+                    duration: Duration(milliseconds: 100),
+                    // curve: Curves.easeIn,
+                    curve: Curves.linear,
+                  );
+                },
+              );
+              isAppbarExpanded = false;
+            } else {
+              // must be equals to or more than height difference
+              if (scrollController.offset >= heightDifference) {
+                // do not animate anything
+                isAppbarExpanded = false;
+              } else {
+                print(
+                    'wierd/unknown state, scroll controller offset should be equals to height difference, but it is not');
+              }
+            }
+          }
+        } else {
+          if (scrollController.offset > expandedHeight - collapsedHeight) {
+            // do nothing
+          } else {
+            if (scrollController.offset >= threshold) {
+              // more than threshold
+              // animate to 100
+              scrollingViaUser =
+                  false; // to not execute this full if else code block when programmatically scrolling
+              Future.delayed(
+                Duration(milliseconds: 50),
+                () {
+                  scrollController.animateTo(
+                    expandedHeight - collapsedHeight,
+                    duration: Duration(milliseconds: 100),
+                    // curve: Curves.easeIn,
+                    curve: Curves.linear,
+                  );
+                },
+              );
+            } else {
+              // less than threshold
+              if (scrollController.offset > 0) {
+                // less than threshold but more than 0
+                // animate to 0
+                scrollingViaUser =
+                    false; // to not execute this full if else code block when programmatically scrolling
+                Future.delayed(
+                  Duration(milliseconds: 50),
+                  () {
+                    scrollController.animateTo(
+                      0,
+                      duration: Duration(milliseconds: 100),
+                      // curve: Curves.easeIn,
+                      curve: Curves.linear,
+                    );
+                  },
+                );
+                isAppbarExpanded = true;
+              } else {
+                // must be equal to 0
+                if (scrollController.offset == 0) {
+                  // do not animate anything
+                  isAppbarExpanded = true;
+                } else {
+                  print(
+                      'wierd/unknown state, scroll controller should be equal to 0, but it is not');
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return true;
+  }
+
+  Widget subtitleAndTime(BuildContext context, String subtitle, String time) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          subtitle.isEmpty ? " " : subtitle,
+          // style: Theme.of(context).textTheme.bodyMedium,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1, // Adjust maxLines as needed
+        ),
+        const SizedBox(height: 2),
+        // Adds some spacing between subtitle and time
+        Text(
+          time,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       // backgroundColor: Colors.black,
-      appBar: buildAppBar,
       body: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           if (constraints.maxWidth <= 1024 && constraints.maxWidth >= 600) {
@@ -88,8 +233,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       bottomNavigationBar: buildNavigationBar(context, screenSize),
     );
   }
-
-
 
   Material buildNavigationBar(BuildContext context, Size screenSize) {
     return Material(
@@ -121,7 +264,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                   ),
                   InkWell(
-                    onTap: () => scaffoldMessage(message: 'Profile coming Soon...', context:  context, screenSize:  screenSize),
+                    onTap: () => scaffoldMessage(
+                        message: 'Profile coming Soon...',
+                        context: context,
+                        screenSize: screenSize),
                     child: const ThemedCircleAvatar(
                       // backgroundColor: Theme.of(context).colorScheme.onPrimary,
                       radius: 30,
@@ -166,8 +312,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             Text(
               'Task',
               style: GoogleFonts.inter(
-                // textStyle: Theme.of(context).textTheme.titleMedium,
-              ),
+                  // textStyle: Theme.of(context).textTheme.titleMedium,
+                  ),
             ),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -193,107 +339,174 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     int notesLength = allNotes.length;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        children: [
-          // Search Widget
-          ValueListenableBuilder(
-            valueListenable: isSearching,
-            builder: (context, value, _) {
-              print('isSearching : ${isSearching.value}');
-              return AnimatedOpacity(
-                opacity: value ? 1.0 : 0.0,
-                // Fade in when value is true, fade out when false
-                duration: const Duration(milliseconds: 300),
-                // Adjust this duration to match your animation speed
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  width: double.infinity,
-                  height: value ? constraints.maxHeight * .1 : 0,
-                  // color: Colors.lime,
-                  child: value
-                      ? Center(
+      child: NotificationListener<ScrollNotification>(
+        onNotification: handleScrollNotification,
+        child: CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            // Appbar
+
+            SliverAppBar(
+              expandedHeight: expandedHeight,
+              collapsedHeight: collapsedHeight,
+              toolbarHeight: 0,
+              pinned: true,
+              flexibleSpace: LayoutBuilder(
+                builder: (context, constraints) {
+                  print('max Height : ${constraints.maxHeight}');
+
+                  double paddingTop =
+                      ((constraints.maxHeight - 80) / (180 - 80)) * 120;
+                  double percent = (constraints.maxHeight - kToolbarHeight) /
+                          (180 - kToolbarHeight) +
+                      1;
+
+                  return SizedBox(
+                    height: constraints.maxHeight,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          flex: 2,
                           child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              SearchWidget(
-                                focusNode: searchFocusNode,
-                                parentHeight: constraints.maxHeight * .1,
-                                parentWidth: double.infinity,
-                              ),
-                              const SizedBox(width: 20),
-                              CloseSearchContainer(
-                                searchFocusNode: searchFocusNode,
-                                notifier: isSearching,
+                              Padding(
+                                padding:
+                                    const EdgeInsets.only(left: 16, bottom: 8),
+                                child: Text('Notes',
+                                    style: TextStyle(fontSize: 20 * percent)),
                               ),
                             ],
                           ),
-                        )
-                      : null, // When value is false, don't render the child
-                ),
-              );
-            },
-          ),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.only(top: paddingTop),
+                                child: const Icon(Icons.check_box),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(top: paddingTop),
+                                child: const Icon(Icons.search),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(top: paddingTop),
+                                child: const Icon(Icons.more_vert),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
 
-          // ListView Widget
-          ValueListenableBuilder(
-            valueListenable: isSearching,
-            builder: (context, isSearchingValue, _) {
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
+            // Search Widget
+            SliverToBoxAdapter(
+              child: ValueListenableBuilder(
+                valueListenable: isSearching,
+                builder: (context, value, _) {
+                  return AnimatedOpacity(
+                    opacity: value ? 1.0 : 0.0,
+                    // Fade in when value is true, fade out when false
+                    duration: const Duration(milliseconds: 300),
+                    // Adjust this duration to match your animation speed
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      width: double.infinity,
+                      height: value ? constraints.maxHeight * .1 : 0,
+                      // color: Colors.lime,
+                      child: value
+                          ? Center(
+                              child: Row(
+                                children: [
+                                  SearchWidget(
+                                    focusNode: searchFocusNode,
+                                    parentHeight: constraints.maxHeight * .1,
+                                    parentWidth: double.infinity,
+                                  ),
+                                  const SizedBox(width: 20),
+                                  CloseSearchContainer(
+                                    searchFocusNode: searchFocusNode,
+                                    notifier: isSearching,
+                                  ),
+                                ],
+                              ),
+                            )
+                          : null, // When value is false, don't render the child
+                    ),
+                  );
+                },
+              ),
+            ),
 
-                width: double.infinity,
-                // height:  isSearching.value ? constraints.maxHeight  * .9 : constraints.maxHeight,
-                // height: 400,
-                height: isSearching.value
-                    ? constraints.maxHeight * .9
-                    : constraints.maxHeight,
-                child:
-                    buildNotesListViewWidget(notesLength, allNotes, screenSize),
-              );
-            },
-          ),
-        ],
+            // Notes List
+            buildSliverList(notesLength, allNotes, screenSize),
+          ],
+        ),
       ),
     );
   }
 
-  ListView buildNotesListViewWidget(
+  SliverList buildSliverList(
       int notesLength, List<NoteModel> allNotes, Size screenSize) {
-    return ListView.builder(
-        itemCount: notesLength,
-        itemBuilder: (context, index) {
-          // print(allNotes[index].title);
-          String formattedTime =
-              DateFormat('MMMM d, hh:mm a').format(allNotes[index].time);
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: GestureDetector(
-              onLongPressStart: (details) {
-                final tapPosition = details.globalPosition;
-                buildShowMenu(context, tapPosition, screenSize).then((value) {
-                  if (value == 1) {
-                    context.read<NotesProvider>().deleteNote(
-                          index,
-                        );
-                  }
-                });
-              },
-              child: ListTileWidget(
-                callback: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (BuildContext context) => NoteDetailScreen(index),
-                  ),
-                ),
-                time: formattedTime,
-                customColor: isCustomColor
-                    ? listItemColors[index % 6]
-                    : Theme.of(context).colorScheme.surface,
-                title: allNotes[index].title,
-                subtitle: allNotes[index].note,
-              ),
+    return SliverList(
+      delegate:
+          SliverChildBuilderDelegate(childCount: notesLength, (context, index) {
+        String formattedTime =
+            DateFormat('MMMM d, hh:mm a').format(allNotes[index].time);
+
+        return GestureDetector(
+          onLongPressStart: (details) {
+            final tapPosition = details.globalPosition;
+            buildShowMenu(context, tapPosition, screenSize).then((value) {
+              if (value == 1) {
+                context.read<NotesProvider>().deleteNote(
+                      index,
+                    );
+              }
+            });
+          },
+          child: buildListTile(context, index, allNotes, formattedTime),
+        );
+      }),
+    );
+  }
+
+  Padding buildListTile(BuildContext context, int index,
+      List<NoteModel> allNotes, String formattedTime) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: ListTile(
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (BuildContext context) => NoteDetailScreen(index),
             ),
-          );
-        });
+          ),
+          title: allNotes[index].title.isNotEmpty
+              ? Text(allNotes[index].title)
+              : null,
+          subtitle:
+              subtitleAndTime(context, allNotes[index].note, formattedTime),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
+        ),
+      ),
+    );
   }
 
   Future<int?> buildShowMenu(
