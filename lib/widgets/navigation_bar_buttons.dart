@@ -20,15 +20,15 @@ class NavigationBarButtons extends StatelessWidget {
       child: Container(
 // margin: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-            color: Colors.transparent.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(18),
-            border: const Border(
+            color: Colors.transparent.withOpacity(0.3),
+            borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+            border:  Border(
               top: BorderSide(
-                  color: Colors.grey, width: 1, style: BorderStyle.solid),
+                  color: Colors.grey[700]!, width: 1, style: BorderStyle.solid),
               left: BorderSide(
-                  color: Colors.grey, width: 1, style: BorderStyle.solid),
+                  color: Colors.grey[700]!, width: 1, style: BorderStyle.solid),
               right: BorderSide(
-                  color: Colors.grey, width: 1, style: BorderStyle.solid),
+                  color: Colors.grey[700]!, width: 1, style: BorderStyle.solid),
 
 
             )

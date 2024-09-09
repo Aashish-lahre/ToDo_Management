@@ -23,7 +23,6 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     with WidgetsBindingObserver {
   final FocusNode _noteFocusNode = FocusNode();
   final FocusNode _titleFocusNode = FocusNode();
-  bool keyboardVisibilityStatus = false;
   // bool noteHaveBody = false;
   late NotesProvider notesProvider;
   final ValueNotifier<bool> isEditing = ValueNotifier<bool>(true);
@@ -171,16 +170,19 @@ print('entered make keyboard visible');
   // }
 
   void titleFocusNodeListener() {
-    return _titleFocusNode.addListener(() {
-      if (_titleFocusNode.hasFocus) {
-        setState(() {
-        lastFocusNode = _titleFocusNode;
-        isEditing.value = true;
-        isEditingTitle.value = true;
+    return _titleFocusNode.addListener(titleFocusnodeListener);
+  }
 
-        });
-      }
-    });
+  void titleFocusnodeListener() {
+    if (_titleFocusNode.hasFocus) {
+      setState(() {
+        print('used1');
+      lastFocusNode = _titleFocusNode;
+      isEditing.value = true;
+      isEditingTitle.value = true;
+
+      });
+    }
   }
 
   void scrollDown() {
@@ -248,7 +250,9 @@ print('entered make keyboard visible');
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    // lastFocusNode.dispose();
     _noteFocusNode.dispose();
+    _titleFocusNode.removeListener(titleFocusnodeListener);
     _titleFocusNode.dispose();
     keyboardSubscription.cancel();
 
@@ -260,7 +264,8 @@ print('entered make keyboard visible');
 
 
     scrollController.dispose();
-    lastFocusNode.dispose();
+    // print('disposed');
+
 
     isEditingTitle.dispose();
     isEditing.dispose();
@@ -337,10 +342,9 @@ print('entered make keyboard visible');
 
   @override
   Widget build(BuildContext context) {
-    print('build method called');
+
     Size screenSize = MediaQuery.of(context).size;
-    // bool keyboardVisible =
-    //     MediaQuery.of(context).viewInsets.bottom == 0 ? false : true;
+
 
 
     return PopScope(
@@ -561,10 +565,13 @@ print('calling scroll up when the note field is empty and title is not visible')
                 // note field has no content or maybe one liner content
 
                 // i am also getting here when focus transfer from title to note
+
+                print('used2');
                 if(lastFocusNode == _titleFocusNode) {
                   // do nothing, this situation is handled by note listener
 
                   setState(() {
+                    print('used3');
                     lastFocusNode = _noteFocusNode;
                   });
 

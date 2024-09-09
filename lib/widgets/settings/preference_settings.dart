@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_management/widgets/settings/widgets/segment_button_widget.dart';
 
 import '../../network/data/theme_provider.dart';
 import 'package:provider/provider.dart';
@@ -64,7 +65,7 @@ class PreferenceSettings extends StatelessWidget {
                 Consumer<ThemeProvider>(
                   builder: (context, provider, child) {
                     Set<int> selected = {provider.themeInt};
-                    return buildSegmentedButton(selected, context);
+                    return SegmentButtonWidget(selected: selected, context: context);
                   },
                 ),
                 const Divider(),
@@ -106,49 +107,6 @@ class PreferenceSettings extends StatelessWidget {
     );
   }
 
-  SegmentedButton<int> buildSegmentedButton(Set<int> selected, BuildContext context) {
-    return SegmentedButton(
-                    segments: const <ButtonSegment<int>>[
-                      ButtonSegment(
-                        value: 0,
-                        label: Text('Light'),
-                      ),
-                      ButtonSegment(
-                        value: 1,
-                        label: Text('Dark'),
-                      ),
-                      ButtonSegment(
-                        value: 2,
-                        label: Text('System'),
-                      ),
-                    ],
-                    selected: selected,
-
-                    onSelectionChanged: (newSelection) {
-                      context
-                          .read<ThemeProvider>()
-                          .editThemeMode(newSelection.first);
-                    },
-                    style:  ButtonStyle(
-                      padding: WidgetStateProperty.resolveWith<EdgeInsets>((state) {
-                        return const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0);
-
-
-    }),
-                      backgroundColor:WidgetStateProperty.resolveWith<Color>((states) {
-                        if(states.contains(WidgetState.selected)) {
-                          return Colors.tealAccent;
-                        }
-    return Theme.of(context).colorScheme.surface;
-    }),
-                      foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                        if(states.contains(WidgetState.selected)) {
-                          return Colors.black;
-                        }
-                        return Theme.of(context).colorScheme.onSurface;
-                      }),
-
-                    ),
-                  );
-  }
 }
+
+
