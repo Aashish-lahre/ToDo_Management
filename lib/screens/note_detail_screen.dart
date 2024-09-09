@@ -148,7 +148,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 formattedTime: formattedTime),
              Divider(color: Theme.of(context).colorScheme.onSurface,),
             NoteInputWidget(
-                noteFocusNode: noteFocusNode, noteController: noteController)
+                noteFocusNode: noteFocusNode, noteController: noteController, haveBody: false, )
           ],
         ),
             bottomNavigationBar: ValueListenableBuilder(

@@ -9,21 +9,22 @@ class EditingNavigationButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: MediaQuery
-          .of(context)
-          .viewInsets,
+      // padding: MediaQuery
+      //     .of(context)
+      //     .viewInsets,
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
 // margin: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-            color: Colors.transparent.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: const Border(
+            color: Colors.transparent.withOpacity(0.3),
+            borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+            border: Border(
               top: BorderSide(
-                  color: Colors.grey, width: 1, style: BorderStyle.solid),
-              left: BorderSide(
-                  color: Colors.grey, width: 1, style: BorderStyle.solid),
-              right: BorderSide(
-                  color: Colors.grey, width: 1, style: BorderStyle.solid),
+                  color: Colors.grey[700]!, width: 1, style: BorderStyle.solid),
+              left:  BorderSide(
+                  color: Colors.grey[700]!, width: 1, style: BorderStyle.solid),
+              right:  BorderSide(
+                  color: Colors.grey[700]!, width: 1, style: BorderStyle.solid),
 
 
             )

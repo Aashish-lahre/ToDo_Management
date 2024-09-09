@@ -74,7 +74,7 @@ ThemeData darkTheme = ThemeData(
 
 
   ),
-  colorScheme: const ColorScheme.light(
+  colorScheme: const ColorScheme.dark(
     surface: Color(0xFF2f3136),
     // primary: Color(0xFF202225),
     primary: Color(0xFF292b2f),

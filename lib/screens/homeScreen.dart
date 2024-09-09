@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:task_management/common/utility/scaffold_message.dart';
 import 'package:task_management/network/data/notes_provider.dart';
 import 'package:task_management/network/models/NoteModel.dart';
-import 'package:task_management/ui/add_note_screen.dart';
-import 'package:task_management/ui/note_detail_screen.dart';
+import 'package:task_management/screens/add_note_screen.dart';
+import 'package:task_management/screens/note_detail_screen.dart';
 import 'package:task_management/widgets/appbar_action_widgets.dart';
 import 'package:task_management/widgets/close_search_container.dart';
 
@@ -210,27 +210,30 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      // backgroundColor: Colors.black,
-      body: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          if (constraints.maxWidth <= 1024 && constraints.maxWidth >= 600) {
-            return buildTabletLayout();
-          }
-          if (constraints.maxWidth > 1024) {
-            return buildDesktopLayout();
-          }
-          if (constraints.maxWidth < 600) {
-            return buildMobileLayout(context, constraints, screenSize);
-          }
+    return SafeArea(
 
-          return const Center(
-            child: Text('Layout builder constraint problem'),
-          );
-        },
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        // backgroundColor: Colors.black,
+        body: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            if (constraints.maxWidth <= 1024 && constraints.maxWidth >= 600) {
+              return buildTabletLayout();
+            }
+            if (constraints.maxWidth > 1024) {
+              return buildDesktopLayout();
+            }
+            if (constraints.maxWidth < 600) {
+              return buildMobileLayout(context, constraints, screenSize);
+            }
+      
+            return const Center(
+              child: Text('Layout builder constraint problem'),
+            );
+          },
+        ),
+        bottomNavigationBar: buildNavigationBar(context, screenSize),
       ),
-      bottomNavigationBar: buildNavigationBar(context, screenSize),
     );
   }
 
@@ -300,31 +303,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  AppBar get buildAppBar {
-    return AppBar(
-      // backgroundColor: Colors.transparent,
-      toolbarHeight: 100,
-      title: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Task',
-              style: GoogleFonts.inter(
-                  // textStyle: Theme.of(context).textTheme.titleMedium,
-                  ),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: getHomeScreenAppbarActionWidgets(context),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget buildTabletLayout() {
     return const Text("Implement to tablet....");
   }
@@ -346,68 +324,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           slivers: [
             // Appbar
 
-            SliverAppBar(
-              expandedHeight: expandedHeight,
-              collapsedHeight: collapsedHeight,
-              toolbarHeight: 0,
-              pinned: true,
-              flexibleSpace: LayoutBuilder(
-                builder: (context, constraints) {
-                  print('max Height : ${constraints.maxHeight}');
-
-                  double paddingTop =
-                      ((constraints.maxHeight - 80) / (180 - 80)) * 120;
-                  double percent = (constraints.maxHeight - kToolbarHeight) /
-                          (180 - kToolbarHeight) +
-                      1;
-
-                  return SizedBox(
-                    height: constraints.maxHeight,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 16, bottom: 8),
-                                child: Text('Notes',
-                                    style: TextStyle(fontSize: 20 * percent)),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.only(top: paddingTop),
-                                child: const Icon(Icons.check_box),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.only(top: paddingTop),
-                                child: const Icon(Icons.search),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.only(top: paddingTop),
-                                child: const Icon(Icons.more_vert),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
+            buildSliverAppBar(),
 
             // Search Widget
             SliverToBoxAdapter(
@@ -455,6 +372,57 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  SliverAppBar buildSliverAppBar() {
+    return SliverAppBar(
+            expandedHeight: expandedHeight,
+            collapsedHeight: collapsedHeight,
+            toolbarHeight: 0,
+            pinned: true,
+            flexibleSpace: LayoutBuilder(
+              builder: (context, constraints) {
+
+                double paddingTop =
+                    ((constraints.maxHeight - 80) / (180 - 80)) * 120;
+                double percent = (constraints.maxHeight - kToolbarHeight) /
+                        (180 - kToolbarHeight) +
+                    1;
+
+                return SizedBox(
+                  height: constraints.maxHeight,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 16),
+                              child: Text('Notes',
+                                  style: TextStyle(fontSize: 20 * percent)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: getHomeScreenAppbarActionWidgets(context: context,paddingTop:  paddingTop),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          );
   }
 
   SliverList buildSliverList(
