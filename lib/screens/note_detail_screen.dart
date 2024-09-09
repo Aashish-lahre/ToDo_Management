@@ -124,22 +124,22 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
   }
 
   Future<void> makeKeyBoardVisible() async {
-    print('entered make keyboard visible');
+    
     keyboardVisibleCompleter  = Completer<void>();
     noteFocusNode.requestFocus();
-    print('asked for request focus');
+    
 
-    print('waiting it keyboard visible...');
+    
     await keyboardVisibleCompleter.future;
-    print('not waiting anymore');
+    
   }
 
   void ifKeyboardVisible(bool visible) {
     if(visible && !keyboardVisibleCompleter.isCompleted) {
       keyboardVisibleCompleter.complete();
-      print('keyboard is visible in if keyboard visible');
+      
     } else {
-      print('keyboard has disappeared');
+      
       noteHaveBody.value = false;
 
     }
@@ -152,7 +152,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
   void titleFocusnodeListener() {
     if (titleFocusNode.hasFocus) {
       setState(() {
-        print('used1');
+        
         lastFocusNode = titleFocusNode;
         isEditing.value = true;
         isEditingTitle.value = true;
@@ -165,20 +165,20 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
   void scrollDown() {
     // programmatically scroll down --> seeing below content
 
-    print('scroll down reached');
+    
 
     if (scrollController.position.pixels < 85) {
-      print('entered scroll down if');
+      
       if(noteHaveBody.value == false) {
-        print('note body was false');
+        
         noteHaveBody.value = true;
-        print('note body is true');
+        
       }
       // Future.delayed(const Duration(milliseconds: 50), () {
 
-      print('about to visit post frame callback');
+      
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        print('scrolling down making title hide');
+        
         // scrollController.animateTo(titleContainerHeight,
         //     duration: const Duration(milliseconds: 200), curve: Curves.linear);
 
@@ -188,7 +188,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
 
         scrollController.animateTo(scrollController.position.maxScrollExtent,
             duration: const Duration(milliseconds: 200), curve: Curves.linear);
-        print('scrolling code has executed');
+        
       });
 
       // });
@@ -197,18 +197,18 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
 
   void scrollUp(double pixel) {
     // programmatically scroll up --> seeing up content
-    print('scroll up reached');
+    
 
     if (scrollController.position.pixels != 0) {
-      print('entered if condition');
+      
 
       if(scrollController.position.pixels > pixel) {
 
         // Future.delayed(const Duration(milliseconds: 50), () {
-        print('scrolling to top');
+        
         scrollController.animateTo(pixel,
             duration: const Duration(milliseconds: 200), curve: Curves.linear);
-        print('scrolling to top code executed');
+        
         // });
         WidgetsBinding.instance.addPostFrameCallback((_) {
           // setState(() {
@@ -237,7 +237,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
     titleFocusNode.dispose();
     keyboardSubscription.cancel();
     scrollController.dispose();
-    // print('disposed');
+    // 
 
 
     isEditingTitle.dispose();
@@ -372,8 +372,8 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
 
     // bool? keyboardVisibility = KeyboardVisibilityProvider.isKeyboardVisible(context) as bool?;
 
-    print('keyboardVisibility should be true : ${keyboardVisibilityController.isVisible}');
-    print('note have body should be true : $noteHaveBody');
+    
+    
     return Listener(
       onPointerDown: (event) {
         // Store the initial position when the pointer goes down
@@ -392,7 +392,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
       },
       onPointerUp: (event) {
         if (isDragging) {
-          print('Drag detected');
+          
         } else {
           onNoteBoxClicked();
         }
@@ -401,7 +401,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
       child: ValueListenableBuilder(
         valueListenable: noteHaveBody,
         builder: (context, noteHaveBodyValue, child) {
-          print('listenable called : $noteHaveBodyValue');
+          
           return SizedBox(
             width: double.infinity,
             height: keyboardVisibilityController.isVisible
@@ -451,7 +451,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
 
           // checking if there is not much new lines
           if(_lineCount < 5) {
-            print('calling scroll up when the content is less than 5');
+            
             scrollUp(0); // make title visible
           } else {
             // do nothing
@@ -459,13 +459,13 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
         }
       } else {
         // note text field is empty
-        // print('reached at checking scroll position');
+        // 
 
         // checking if title box is not visible
         if (scrollController.position.pixels > titleContainerHeight) {
 
           // if(lastFocusNode == _titleFocusNode) {
-          print('calling scroll up when the note field is empty and title is not visible');
+          
           scrollUp(0); // make title visible
           // } else {
           // do nothing
@@ -476,13 +476,13 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
 
             // checking if the note text is on less than 5 lines
             if(_lineCount < 5) {
-              print('calling scroll up when the note field less than line 5');
+              
               scrollUp(0); // scroll upto pixel 0 (complete scroll)
             } else {
 
               // checking if the note text is on 5 lines
               if(noteController.text.isNotEmpty || _lineCount == 5) {
-                print('calling scroll up when the note field equalto line 5');
+                
 
                 scrollUp(0);
               } else {
@@ -500,16 +500,16 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
 
             // i am also getting here when focus transfer from title to note
 
-            print('used2');
+            
             if(lastFocusNode == titleFocusNode) {
               // do nothing, this situation is handled by note listener
 
               setState(() {
-                print('used3');
+                
                 lastFocusNode = noteFocusNode;
               });
 
-              print('scrolling down from last focus note == note focus node');
+              
 
               scrollDown();
 
@@ -546,20 +546,20 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
         }
       } else {
         // note field do not have content
-        print('reached at last code');
+        
 // trail error code
 
-        print('about to call widgets binding for making keyboard visible');
+        
         WidgetsBinding.instance.addPostFrameCallback((_) async{
-          print('called widgets binding for making keyboard visible');
+          
 
           await makeKeyBoardVisible();
-          print('about to call scroll down');
+          
           scrollDown();
         });
 
         // WidgetsBinding.instance.addPostFrameCallback((_) {
-        //   print('checking height of keyboard : ${MediaQuery.of(context).viewInsets.bottom}');
+        //   
         //   setState(() {
         //     keyboardVisibilityStatus = true;
         //   });
