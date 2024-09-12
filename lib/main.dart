@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/common/system_theme.dart';
 import 'package:task_management/common/themes.dart';
-import 'package:task_management/network/data/notes_provider.dart';
+import 'package:task_management/network/data/notes/notes_provider.dart';
 import 'package:task_management/network/data/theme_provider.dart';
 import 'package:task_management/network/models/NoteModel.dart';
+import 'package:task_management/network/models/loginInfo.dart';
+import 'package:task_management/screens/authentication/login_page.dart';
 import 'package:task_management/screens/homeScreen.dart';
 
 void main() async {
@@ -22,17 +25,7 @@ void main() async {
   // box.add(dummyNote);
   // print('local stored value : ${box.values.last.note}');
 
-  // final Brightness brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-  //
-  // // Set the system UI overlay style based on the brightness
-  // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-  //   statusBarColor: brightness == Brightness.dark
-  //       ? Color(0xFF2f3136) // Dark mode color
-  //       : Color(0xFFe9ecef), // Light mode color
-  //   statusBarIconBrightness: brightness == Brightness.dark
-  //       ? Brightness.light // Light icons for dark mode
-  //       : Brightness.dark,  // Dark icons for light mode
-  // ));
+
   runApp(
     MultiProvider(
       providers: [
@@ -41,12 +34,43 @@ void main() async {
 
         ChangeNotifierProvider(
           create: (context) => NotesProvider(),
-
         ),
+        ChangeNotifierProvider(create: (context) => LoginInfoProvider()),
       ],
       child: const SystemTheme(child: MyApp()),
     ),
   );
+}
+
+Future<Widget> AuthenticateUser(BuildContext context) async {
+  bool exists = await LoginInfoRepository.checkLoginInfoBoxExists();
+  if(exists) {
+
+      LoginInfo loginInfo = Provider.of<LoginInfoProvider>(context).loginInfo;
+      if(loginInfo.type == 'user') {
+
+        var isConnected = await InternetConnectionChecker().hasConnection;
+        if(isConnected) {
+            //TODO: Check logged in with firebase
+          return const HomeScreen();
+
+
+
+        } else {
+          // logged in as a user but not connected to internet
+          // TODO: HEADER --> Offline Mode
+          return const HomeScreen();
+        }
+
+      } else {
+        // type - Guest
+        return const HomeScreen();
+
+      }
+  } else {
+    // TODO: Clear all notes already exists in local device
+      return const SignInScreen();
+  }
 }
 
 

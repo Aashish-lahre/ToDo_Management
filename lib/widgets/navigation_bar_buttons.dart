@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../common/utility/scaffold_message.dart';
-import '../network/data/notes_provider.dart';
+import '../network/data/notes/notes_provider.dart';
 
 class NavigationBarButtons extends StatelessWidget {
   final int thisNoteIndex;

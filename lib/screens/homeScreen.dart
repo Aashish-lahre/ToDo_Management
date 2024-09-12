@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/common/utility/scaffold_message.dart';
-import 'package:task_management/network/data/notes_provider.dart';
+import 'package:task_management/network/data/notes/notes_provider.dart';
 import 'package:task_management/network/models/NoteModel.dart';
 import 'package:task_management/screens/add_note_screen.dart';
 import 'package:task_management/screens/note_detail_screen.dart';

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:task_management/network/data/notes_provider.dart';
+import 'package:task_management/network/data/notes/notes_provider.dart';
 import 'package:task_management/network/models/NoteModel.dart';
 import 'package:task_management/widgets/editing_navigation_buttons.dart';
 import 'package:task_management/widgets/navigation_bar_buttons.dart';
