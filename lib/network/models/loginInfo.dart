@@ -4,23 +4,22 @@ import 'package:hive/hive.dart';
 
 class LoginInfo {
   String type;
-  String? guestId;
   String? userId;
   String? userName;
   String? email;
   String? password;
-  String isSynced;
-  int notesLength;
+  bool isSynced;
+
 
   LoginInfo({
     required this.type,
-    this.guestId,
+
     this.userId,
     this.userName,
     this.email,
     this.password,
     required this.isSynced,
-    required this.notesLength,
+
 
 });
 
@@ -30,16 +29,14 @@ class LoginInfo {
     required this.email,
     required this.password,
     required this.isSynced,
-    required this.notesLength,
 
-}) : type = 'user', guestId = null;
+
+}) : type = 'user';
 
 
 
   LoginInfo.guest({
-    required this.guestId,
     required this.isSynced,
-    required this.notesLength,
 
   }) : type = 'guest', userId = null, userName = null, email = null, password = null;
 
@@ -63,23 +60,25 @@ class LoginInfoRepository {
 
 
   static Future<LoginInfo> getLoginInfo() async {
+    print('entered get login info box');
     Box<dynamic> box = await _openBox();
-    for(int i in box.keys.toList()) {
-      print('fetching = key : $i --> value : ${box.get(i)}');
-    }
+print('after open box');
+    // for(int i in box.keys.toList()) {
+    //   print('fetching = key : $i --> value : ${box.get(i)}');
+    // }
     if((box.get('type') as String) == 'user') {
-      return LoginInfo.user(userId: box.get('userId'), userName: box.get('userName'), email: box.get('email'), password: box.get('password'), isSynced: box.get('isSynced'), notesLength: box.get('notesLength'));
+      return LoginInfo.user(userId: box.get('userId'), userName: box.get('userName'), email: box.get('email'), password: box.get('password'), isSynced: box.get('isSynced'));
     } else {
-      return LoginInfo.guest(guestId: box.get('guestId'), isSynced: box.get('isSynced'), notesLength: box.get('notesLength'));
+      return LoginInfo.guest(isSynced: box.get('isSynced'));
     }
 
   }
 
-  static Future<void> createLoginInfo(LoginInfo loginInfo) async {
+  static Future<LoginInfo> createLoginInfo(LoginInfo loginInfo) async {
     Box<dynamic> box = await _openBox();
     box.clear();
-    box.putAll({'type': loginInfo.type, 'guestId': loginInfo.guestId, 'userId': loginInfo.userId, 'userName': loginInfo.userName, 'email': loginInfo.email, 'password': loginInfo.password, 'isSynced': loginInfo.isSynced, 'notesLength': loginInfo.notesLength});
-
+    box.putAll({'type': loginInfo.type, 'userId': loginInfo.userId, 'userName': loginInfo.userName, 'email': loginInfo.email, 'password': loginInfo.password, 'isSynced': loginInfo.isSynced,});
+    return getLoginInfo();
   }
 
 
@@ -87,16 +86,36 @@ class LoginInfoRepository {
 
 
 class LoginInfoProvider with ChangeNotifier {
-  late LoginInfo _loginInfo;
+
+  LoginInfoProvider() {
+    print('called');
+    _initialize();
+  }
+
+   late LoginInfo _loginInfo;
   LoginInfo get loginInfo {
     return _loginInfo;
+  }
+
+  Future<void> _initialize() async {
+    if(await loginInfoBoxExists()) {
+      print('login box exists');
+      return getLoginInfo();
+    }
+  }
+
+  Future<bool> loginInfoBoxExists() async {
+    bool exists = await LoginInfoRepository.checkLoginInfoBoxExists();
+    return exists;
   }
 
 
 
   void getLoginInfo() async {
+    print('about to fetch : getLoginInfo');
     LoginInfo loginInfo = await LoginInfoRepository.getLoginInfo();
     _loginInfo = loginInfo;
+    print("login box initialized : $_loginInfo");
 
     notifyListeners();
 
@@ -104,8 +123,11 @@ class LoginInfoProvider with ChangeNotifier {
 
 
 
-  void createLoginInfo(LoginInfo loginInfo) async {
-    await LoginInfoRepository.createLoginInfo(loginInfo);
+  void createLoginInfo(LoginInfo createloginInfo) async {
+    LoginInfo newLoginInfo = await LoginInfoRepository.createLoginInfo(createloginInfo);
+    _loginInfo = newLoginInfo;
+    print('login info initialized');
+    notifyListeners();
 
   }
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:task_management/network/data/note_detail_screen_provider.dart';
 import 'package:task_management/network/data/notes/notes_provider.dart';
 import 'package:task_management/network/models/NoteModel.dart';
 import 'package:task_management/widgets/note_input_widget.dart';
@@ -13,16 +14,19 @@ import '../widgets/editing_navigation_buttons.dart';
 import '../widgets/navigation_bar_buttons.dart';
 
 class NoteDetailScreen extends StatefulWidget {
-  final int noteIndex;
 
+  static const routeName = '/noteDetailScreen';
 
-  const NoteDetailScreen(this.noteIndex, {super.key});
+  const NoteDetailScreen({super.key});
 
   @override
   State<NoteDetailScreen> createState() => _NoteDetailScreenState();
 }
 
 class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBindingObserver  {
+
+
+  late final int noteIndex;
   final FocusNode noteFocusNode = FocusNode();
   final FocusNode titleFocusNode = FocusNode();
   late TextEditingController titleController;
@@ -66,13 +70,15 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
     }
   }
 
-  void submitNote() {
-
+  Future<void> _submitNote() async {
+print('submitting note from details screen');
     NoteModel newNote = NoteModel(
         title: titleController.text,
         note: noteController.text,
-        bookmarked: note.bookmarked);
-    context.read<NotesProvider>().editNote(note, newNote);
+        bookmarked: note.bookmarked,
+        id: note.id,
+    );
+    await context.read<NotesProvider>().editNote(note, newNote, context);
     isEditing.value = false;
     isEditingTitle.value = false;
     titleFocusNode.unfocus();
@@ -87,7 +93,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
     titleController = TextEditingController()..addListener(checkForValidNote);
     noteController = TextEditingController()..addListener(checkForValidNote);
     noteController.addListener(_updateLineCount);
-    keyboardSubscription = keyboardVisibilityController.onChange.listen(ifKeyboardVisible);
+    keyboardSubscription = keyboardVisibilityController.onChange.listen(_ifKeyboardVisible);
 
     titleFocusNode.addListener(() {
       if (titleFocusNode.hasFocus) {
@@ -95,8 +101,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
         isEditingTitle.value = true;
       }
     });
+    noteIndex = Provider.of<NoteDetailScreenProvider>(context, listen: false).index;
     noteProvider = context.read<NotesProvider>();
-    note = noteProvider.notes[widget.noteIndex];
+    note = noteProvider.notes[noteIndex];
     titleFocusNodeListener();
     formattedTime = DateFormat('EEEE, MMMM d, hh:mm a').format(note.time);
 
@@ -106,8 +113,8 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
     noteProvider.addListener(() {
 
 
-      if(noteProvider.notes.elementAtOrNull(widget.noteIndex) != null) {
-        note = noteProvider.notes[widget.noteIndex];
+      if(noteProvider.notes.elementAtOrNull(noteIndex) != null) {
+        note = noteProvider.notes[noteIndex];
         isBookmark.value = note.bookmarked;
 
       }
@@ -124,7 +131,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
   }
 
   Future<void> makeKeyBoardVisible() async {
-    
+    print('make keyboard visible called');
     keyboardVisibleCompleter  = Completer<void>();
     noteFocusNode.requestFocus();
     
@@ -134,15 +141,24 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
     
   }
 
-  void ifKeyboardVisible(bool visible) {
-    if(visible && !keyboardVisibleCompleter.isCompleted) {
-      keyboardVisibleCompleter.complete();
-      
-    } else {
-      
-      noteHaveBody.value = false;
+  void _ifKeyboardVisible(bool visible) {
+    print('if keyboard visible called');
 
+    try {
+      if(visible && !keyboardVisibleCompleter.isCompleted) {
+        keyboardVisibleCompleter.complete();
+
+      } else {
+
+        noteHaveBody.value = false;
+
+      }
+    } catch(e) {
+      print('other error');
+      makeKeyBoardVisible();
     }
+
+
   }
 
   void titleFocusNodeListener() {
@@ -250,7 +266,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.inactive) {
       if (checkForValidNote()) {
-        submitNote();
+        _submitNote();
       }
     }
     super.didChangeAppLifecycleState(state);
@@ -277,8 +293,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        onPopInvoke(context);
+
+
+      onPopInvokedWithResult: (didPop, result) async {
+
+        await onPopInvoke(context);
       },
       child: SafeArea(
         child: Scaffold(
@@ -589,10 +608,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
     );
   }
 
-  void onPopInvoke(BuildContext context) {
+  Future<void> onPopInvoke(BuildContext context) async {
     if (checkForValidNote()) {
+      print('check is valid');
       if(isEditing.value) {
-        submitNote();
+        await _submitNote();
       }
 
       titleController.clear();
@@ -606,12 +626,19 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
     });
   }
 
+  void _deleteNote(BuildContext context) {
+    context.read<NotesProvider>().deleteNote(noteIndex, context);
+    Navigator.of(context).pop();
+  }
+
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
       backgroundColor: Theme.of(context).colorScheme.surface,
       toolbarHeight: kToolbarHeight,
       leading: IconButton(
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: () async {
+          await onPopInvoke(context);
+        },
         icon: const Icon(Icons.arrow_back_ios_new),
         iconSize: 25,
         color: Theme.of(context).iconTheme.color,
@@ -628,7 +655,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
                   onPressed: isNoteValidValue
                       ? () {
 
-                    submitNote();
+                    _submitNote();
 
                   }
                       : null,
@@ -694,8 +721,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> with WidgetsBinding
                 if (!value)
                   IconButton(
                       onPressed: () {
-                        context.read<NotesProvider>().deleteNote(widget.noteIndex);
-                        Navigator.of(context).pop();
+                        _deleteNote(context);
                       },
                       icon: const Icon(Icons.delete)),
               ],

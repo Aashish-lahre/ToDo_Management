@@ -3,26 +3,82 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/common/utility/scaffold_message.dart';
+import 'package:task_management/network/data/header_message_provider.dart';
+import 'package:task_management/network/data/note_detail_screen_provider.dart';
 import 'package:task_management/network/data/notes/notes_provider.dart';
 import 'package:task_management/network/models/NoteModel.dart';
+import 'package:task_management/network/models/header_message_model.dart';
 import 'package:task_management/screens/add_note_screen.dart';
 import 'package:task_management/screens/note_detail_screen.dart';
-import 'package:task_management/widgets/appbar_action_widgets.dart';
-import 'package:task_management/widgets/close_search_container.dart';
+import 'package:task_management/screens/profile.dart';
+import 'package:task_management/widgets/homeScreenWidget/appbar_action_widgets.dart';
+import 'package:task_management/widgets/homeScreenWidget/close_search_container.dart';
+import 'package:task_management/widgets/homeScreenWidget/header_message_widget.dart';
 
-import 'package:task_management/widgets/search_widget.dart';
+import 'package:task_management/widgets/homeScreenWidget/search_widget.dart';
 import 'package:task_management/widgets/themedWidgets/themedIcon.dart';
 import '../common/constants.dart';
 import '../widgets/themedWidgets/themed_circle_avatar.dart';
 
+
+/// TODO: when exclusive lists are empty --> synced
+/// Todo: when featching note from firestore, the dates are not correct, they some the current moment time, not the time they were created.
+/// when exclusive lists are not empty --> not synced
+///   in this case if i create a note, but failed to update in firestore(for any reason, maybe no internet)
+///   keep it not synced
+/// when exclusive lists are empty and i create a note and update in firestore successfully
+///   check if exclusive lists are empty
+///     if true --> i don't have to fetching notes from firestore
+///     i can just make sync --> synced
+///   if updating note in firestore fails
+///     sync --> not synced
+///
+/// when we create note and successfully update it on firestore, we don't
+/// have to fetch notes from firestore and check if are equal
+///
+/// when app start
+///   if user and not isSynced
+///     only local notes
+///   if user and yes isSynced
+///     initialise the exclusive lists
+///       if equal --> synced
+///       if not equal --> not synced
+///       if error --> not synced
+///         show header message
+///     when create note
+///       add to local note
+///       update firestore
+///         if sucessful
+///           check exclusive lists are empty
+///             if true
+///               synced
+///             if false
+///               not synced
+///         if unsucessful
+///           unsynced
+///     when update note
+///       deletes the previous note
+///       add a new note
+///       update the firestore
+///     when delete note
+///
+///
+///
+///
+///
+///
+///
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+  static const routeName = '/';
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+
   ValueNotifier<bool> isSearching = ValueNotifier(false);
   final FocusNode searchFocusNode = FocusNode();
   bool isCustomColor = false;
@@ -42,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void initState() {
+    print('homescreen initializer gets called');
     WidgetsBinding.instance.addObserver(this);
     _keyboardHeight = 0;
     scrollController = ScrollController(initialScrollOffset: 0);
@@ -90,11 +147,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             scrollingViaUser =
                 false; // to not execute this full if else code block when programmatically scrolling
             Future.delayed(
-              Duration(milliseconds: 50),
+              const Duration(milliseconds: 50),
               () {
                 scrollController.animateTo(
                   0,
-                  duration: Duration(milliseconds: 100),
+                  duration: const Duration(milliseconds: 100),
                   // curve: Curves.easeIn,
                   curve: Curves.linear,
                 );
@@ -108,11 +165,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               scrollingViaUser =
                   false; // to not execute this full if else code block when programmatically scrolling
               Future.delayed(
-                Duration(milliseconds: 50),
+                const Duration(milliseconds: 50),
                 () {
                   scrollController.animateTo(
                     expandedHeight - collapsedHeight,
-                    duration: Duration(milliseconds: 100),
+                    duration: const Duration(milliseconds: 100),
                     // curve: Curves.easeIn,
                     curve: Curves.linear,
                   );
@@ -140,11 +197,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               scrollingViaUser =
                   false; // to not execute this full if else code block when programmatically scrolling
               Future.delayed(
-                Duration(milliseconds: 50),
+                const Duration(milliseconds: 50),
                 () {
                   scrollController.animateTo(
                     expandedHeight - collapsedHeight,
-                    duration: Duration(milliseconds: 100),
+                    duration: const Duration(milliseconds: 100),
                     // curve: Curves.easeIn,
                     curve: Curves.linear,
                   );
@@ -158,11 +215,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 scrollingViaUser =
                     false; // to not execute this full if else code block when programmatically scrolling
                 Future.delayed(
-                  Duration(milliseconds: 50),
+                  const Duration(milliseconds: 50),
                   () {
                     scrollController.animateTo(
                       0,
-                      duration: Duration(milliseconds: 100),
+                      duration: const Duration(milliseconds: 100),
                       // curve: Curves.easeIn,
                       curve: Curves.linear,
                     );
@@ -256,51 +313,52 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 color: Theme.of(context).colorScheme.primary,
               ),
 
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  InkWell(
-                    onTap: () {},
-                    child: const ThemedCircleAvatar(
-                      radius: 30,
-                      child: ThemedIcon(Icons.home_rounded),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () => scaffoldMessage(
-                        message: 'Profile coming Soon...',
-                        context: context,
-                        screenSize: screenSize),
-                    child: const ThemedCircleAvatar(
-                      // backgroundColor: Theme.of(context).colorScheme.onPrimary,
-                      radius: 30,
-                      child: ThemedIcon(Icons.person),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      isSearching.value = true;
-                    },
-                    child: const ThemedCircleAvatar(
-                      radius: 30,
-                      child: ThemedIcon(Icons.search),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () => onAddNotePress(context),
-                    child: const ThemedCircleAvatar(
-                      // backgroundColor: Theme.of(context).colorScheme.onPrimary,
-                      radius: 30,
-                      child: ThemedIcon(Icons.add),
-                    ),
-                  ),
-                ],
-              ),
+              child: buildNavigationButtons(context),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Row buildNavigationButtons(BuildContext context) {
+    return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                InkWell(
+                  onTap: () {},
+                  child: const ThemedCircleAvatar(
+                    radius: 30,
+                    child: ThemedIcon(Icons.home_rounded),
+                  ),
+                ),
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).pushNamed(ProfileScreen.routeName);
+                  },
+                  child: const ThemedCircleAvatar(
+                    // backgroundColor: Theme.of(context).colorScheme.onPrimary,
+                    radius: 30,
+                    child: ThemedIcon(Icons.person),
+                  ),
+                ),
+                InkWell(
+                  onTap: () => isSearching.value = true,
+                  child: const ThemedCircleAvatar(
+                    radius: 30,
+                    child: ThemedIcon(Icons.search),
+                  ),
+                ),
+                InkWell(
+                  onTap: () => onAddNotePress(context),
+                  child: const ThemedCircleAvatar(
+                    // backgroundColor: Theme.of(context).colorScheme.onPrimary,
+                    radius: 30,
+                    child: ThemedIcon(Icons.add),
+                  ),
+                ),
+              ],
+            );
   }
 
   Widget buildTabletLayout() {
@@ -311,9 +369,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return const Text("Implement to desktop and laptop....");
   }
 
-  Widget buildMobileLayout(
-      BuildContext context, BoxConstraints constraints, Size screenSize) {
+  Widget buildMobileLayout(BuildContext context, BoxConstraints constraints, Size screenSize) {
     List<NoteModel> allNotes = context.watch<NotesProvider>().notes;
+    // print('allNotes in homeScreen : ${allNotes[0].id}');
     int notesLength = allNotes.length;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -322,8 +380,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         child: CustomScrollView(
           controller: scrollController,
           slivers: [
-            // Appbar
 
+
+            //HeaderMessage if Available
+            Consumer<HeaderMessageProvider>(
+              builder: (context, messageProvider, _) {
+                HeaderMessageModel? headerMessage = messageProvider.headerMessage;
+                if(headerMessage == null) {
+                  return const SliverToBoxAdapter(child: SizedBox.shrink());
+                }
+                if(headerMessage.callback == null) {
+                  // header message with no button
+
+                  return SliverToBoxAdapter(child: HeaderMessageWidget(headerMessage: headerMessage));
+                }
+
+                if(headerMessage.callback != null) {
+                  return SliverToBoxAdapter(child: HeaderMessageWithButton(headerMessage: headerMessage));
+                }
+
+                return const SliverToBoxAdapter(child: SizedBox.shrink(),);
+
+
+
+              },
+
+            ),
+
+            // Appbar
             buildSliverAppBar(),
 
             // Search Widget
@@ -395,6 +479,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      // Notes Text
                       Expanded(
                         flex: 2,
                         child: Row(
@@ -409,13 +494,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ],
                         ),
                       ),
+
+                      // Action Widgets
                       Expanded(
                         flex: 1,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: getHomeScreenAppbarActionWidgets(context: context,paddingTop:  paddingTop),
-                        ),
+                        child: HomeScreenAppbarActionWidget(paddingTop: paddingTop),
                       ),
                     ],
                   ),
@@ -424,6 +507,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
           );
   }
+
+void deleteNote(LongPressStartDetails details, BuildContext context, Size screenSize, int index) {
+  final tapPosition = details.globalPosition;
+  buildShowMenu(context, tapPosition, screenSize).then((value) {
+    if (value == 1) {
+      context.read<NotesProvider>().deleteNote(
+          index, context
+      );
+    }
+  });
+}
 
   SliverList buildSliverList(
       int notesLength, List<NoteModel> allNotes, Size screenSize) {
@@ -435,14 +529,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
         return GestureDetector(
           onLongPressStart: (details) {
-            final tapPosition = details.globalPosition;
-            buildShowMenu(context, tapPosition, screenSize).then((value) {
-              if (value == 1) {
-                context.read<NotesProvider>().deleteNote(
-                      index,
-                    );
-              }
-            });
+            deleteNote(details, context, screenSize, index);
           },
           child: buildListTile(context, index, allNotes, formattedTime),
         );
@@ -460,11 +547,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           borderRadius: BorderRadius.circular(18),
         ),
         child: ListTile(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (BuildContext context) => NoteDetailScreen(index),
-            ),
-          ),
+          onTap: () {
+            Provider.of<NoteDetailScreenProvider>(context, listen: false).setIndex(index);
+            Navigator.of(context).pushNamed(NoteDetailScreen.routeName);
+          },
           title: allNotes[index].title.isNotEmpty
               ? Text(allNotes[index].title)
               : null,
@@ -506,25 +592,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void onAddNotePress(BuildContext context) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const AddNoteScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          var begin = const Offset(1.0, 0.0);
-          var end = Offset.zero;
-          var curve = Curves.ease;
+    print('Navigating to add note screen...');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.of(context).push(
 
-          var tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+          const AddNoteScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            var begin = const Offset(1.0, 0.0);
+            var end = Offset.zero;
+            var curve = Curves.ease;
 
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-      ),
-    );
+            var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+            return SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            );
+          },
+        ),
+      );
+    });
+
   }
 }
