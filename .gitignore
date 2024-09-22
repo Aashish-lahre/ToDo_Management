@@ -44,3 +44,21 @@ app.*.map.json
 
 # Added by me
 /test/
+android/app/build.gradle
+android/build.gradle
+android/settings.gradle
+web/favicon.png
+web/icons/Icon-192.png
+web/icons/Icon-512.png
+web/icons/Icon-maskable-192.png
+web/icons/Icon-maskable-512.png
+web/index.html
+web/manifest.json
+
+
+
+android/app/google-services.json
+android/app/src/main/res/values/values.xml
+devtools_options.yaml
+firebase.json
+
