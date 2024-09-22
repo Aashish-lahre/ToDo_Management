@@ -21,12 +21,19 @@ class ThemeProvider with ChangeNotifier {
 
 
   Future<Box<int>> openBox() async {
-    if(Hive.isBoxOpen(boxName)) {
-      return Hive.box(boxName);
-    } else {
-      return await Hive.openBox(boxName);
+    try {
+      if(Hive.isBoxOpen(boxName)) {
+        return Hive.box(boxName);
+      } else {
+        return await Hive.openBox(boxName);
+      }
+    } catch (e) {
+      throw Exception("caught the null error : $e");
     }
+
   }
+
+
 
   void mapMode(int modeInt) {
     switch (modeInt) {

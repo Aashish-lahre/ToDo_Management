@@ -1,14 +1,28 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:provider/provider.dart';
+import 'package:task_management/main.dart';
+import 'package:task_management/network/data/notes/notes_provider.dart';
+import 'package:task_management/network/models/loginInfo.dart';
+import 'package:task_management/screens/authentication/sign_up_page.dart';
+
+import '../homeScreen.dart';
 
 class SignInScreen extends StatelessWidget {
   const SignInScreen({super.key});
+  static const routeName = '/signIn';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+
       appBar: AppBar(
-        backgroundColor: Colors.white,
+
         title: const Text("Sign In"),
       ),
       body: SafeArea(
@@ -36,7 +50,7 @@ class SignInScreen extends StatelessWidget {
                   ),
                   // const SizedBox(height: 16),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.05),
-                  SignInForm(),
+                  const SignInForm(),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.2),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -75,21 +89,220 @@ const authOutlineInputBorder = OutlineInputBorder(
   borderRadius: BorderRadius.all(Radius.circular(100)),
 );
 
-class SignInForm extends StatelessWidget {
+// class SignInForm extends StatelessWidget {
+//   const SignInForm({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Form(
+//       child: Column(
+//         children: [
+//           TextFormField(
+//             onSaved: (email) {},
+//             onChanged: (email) {},
+//             textInputAction: TextInputAction.next,
+//             decoration: InputDecoration(
+//                 hintText: "Enter your email",
+//                 labelText: "Email",
+//                 floatingLabelBehavior: FloatingLabelBehavior.always,
+//                 hintStyle: const TextStyle(color: Color(0xFF757575)),
+//                 contentPadding: const EdgeInsets.symmetric(
+//                   horizontal: 24,
+//                   vertical: 16,
+//                 ),
+//                 suffix: SvgPicture.string(
+//                   mailIcon,
+//                 ),
+//                 border: authOutlineInputBorder,
+//                 enabledBorder: authOutlineInputBorder,
+//                 focusedBorder: authOutlineInputBorder.copyWith(
+//                     borderSide: const BorderSide(color: Color(0xFFFF7643)))),
+//           ),
+//           Padding(
+//             padding: const EdgeInsets.symmetric(vertical: 24),
+//             child: TextFormField(
+//               onSaved: (password) {},
+//               onChanged: (password) {},
+//               obscureText: true,
+//               decoration: InputDecoration(
+//                   hintText: "Enter your password",
+//                   labelText: "Password",
+//                   floatingLabelBehavior: FloatingLabelBehavior.always,
+//                   hintStyle: const TextStyle(color: Color(0xFF757575)),
+//                   contentPadding: const EdgeInsets.symmetric(
+//                     horizontal: 24,
+//                     vertical: 16,
+//                   ),
+//                   suffix: SvgPicture.string(
+//                     lockIcon,
+//                   ),
+//                   border: authOutlineInputBorder,
+//                   enabledBorder: authOutlineInputBorder,
+//                   focusedBorder: authOutlineInputBorder.copyWith(
+//                       borderSide: const BorderSide(color: Color(0xFFFF7643)))),
+//             ),
+//           ),
+//           const SizedBox(height: 8),
+//           ElevatedButton(
+//             onPressed: () {},
+//             style: ElevatedButton.styleFrom(
+//               elevation: 0,
+//               backgroundColor: const Color(0xFFFF7643),
+//               foregroundColor: Colors.white,
+//               minimumSize: const Size(double.infinity, 48),
+//               shape: const RoundedRectangleBorder(
+//                 borderRadius: BorderRadius.all(Radius.circular(16)),
+//               ),
+//             ),
+//             child: const Text("Continue"),
+//           )
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+class SignInForm extends StatefulWidget {
   const SignInForm({super.key});
+
+  @override
+  _SignInFormState createState() => _SignInFormState();
+}
+
+class _SignInFormState extends State<SignInForm> {
+  final _signInformKey = GlobalKey<FormState>();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  bool _isMerging = true;
+
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  // Validators
+  String? _validateEmail(String? value) {
+    const emailPattern = r'^[^@]+@[^@]+\.[^@]+$';
+    if (value == null || value.isEmpty) {
+      return 'Email cannot be empty';
+    } else if (!RegExp(emailPattern).hasMatch(value)) {
+      return 'Enter a valid email address';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Password cannot be empty';
+    } else if (value.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+    return null;
+  }
+
+  void _onLogIn() async {
+
+
+      try {
+        var userCredentials = await FirebaseAuth.instance.signInWithEmailAndPassword(email: emailController.text.trim(), password: passwordController.text.trim());
+
+
+          var snapshot = await FirebaseFirestore.instance.collection('userNotes').doc(userCredentials.user!.email).get();
+
+          if(!snapshot.exists) {
+            // user data on firestore does not exists. must create one with login data from above and with empty notes.
+          }
+        Map<String, dynamic> userData = snapshot.data()!;
+
+
+          if(!context.mounted) {
+            // TODO: cannot log in
+            return;
+          }
+          userData = {
+            'type': 'user',
+            'userDetails': {'name': userData['name'], 'email': userData['email'], 'password': userData['password'], 'isSynced': userData['isSynced']},
+          };
+          if(_isMerging) {
+            Provider.of<NotesProvider>(context, listen: false).updateUser(details:  userData, keepNotes: true);
+          } else {
+            Provider.of<NotesProvider>(context, listen: false).updateUser(details: userData, keepNotes: false);
+
+          }
+
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const MyApp()));
+
+
+
+
+
+
+
+
+
+      } on FirebaseAuthException catch(e) {
+print('error code : ${e.code}');
+        throw Exception('sign in error : $e');
+
+      } on FirebaseException catch(e) {
+
+      } on SocketException catch(e) {
+
+      } on TimeoutException catch(e) {
+
+      }
+
+  }
 
   @override
   Widget build(BuildContext context) {
     return Form(
+      key: _signInformKey, // Added form key to control validation
       child: Column(
         children: [
+
+          // email field
           TextFormField(
             onSaved: (email) {},
-            onChanged: (email) {},
+            controller: emailController,
+            validator: _validateEmail, // Email validation
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
-                hintText: "Enter your email",
-                labelText: "Email",
+              hintText: "Enter your email",
+              labelText: "Email",
+              floatingLabelBehavior: FloatingLabelBehavior.always,
+              hintStyle: const TextStyle(color: Color(0xFF757575)),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 16,
+              ),
+              suffix: SvgPicture.string(
+                mailIcon,
+              ),
+              border: authOutlineInputBorder,
+              enabledBorder: authOutlineInputBorder,
+              focusedBorder: authOutlineInputBorder.copyWith(
+                  borderSide: const BorderSide(color: Color(0xFFFF7643))),
+            ),
+          ),
+
+          // password field
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: TextFormField(
+              onSaved: (password) {},
+              controller: passwordController,
+              validator: _validatePassword, // Password validation
+              obscureText: true,
+              decoration: InputDecoration(
+                hintText: "Enter your password",
+                labelText: "Password",
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 hintStyle: const TextStyle(color: Color(0xFF757575)),
                 contentPadding: const EdgeInsets.symmetric(
@@ -97,40 +310,45 @@ class SignInForm extends StatelessWidget {
                   vertical: 16,
                 ),
                 suffix: SvgPicture.string(
-                  mailIcon,
+                  lockIcon,
                 ),
                 border: authOutlineInputBorder,
                 enabledBorder: authOutlineInputBorder,
                 focusedBorder: authOutlineInputBorder.copyWith(
-                    borderSide: const BorderSide(color: Color(0xFFFF7643)))),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: TextFormField(
-              onSaved: (password) {},
-              onChanged: (password) {},
-              obscureText: true,
-              decoration: InputDecoration(
-                  hintText: "Enter your password",
-                  labelText: "Password",
-                  floatingLabelBehavior: FloatingLabelBehavior.always,
-                  hintStyle: const TextStyle(color: Color(0xFF757575)),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
-                  ),
-                  suffix: SvgPicture.string(
-                    lockIcon,
-                  ),
-                  border: authOutlineInputBorder,
-                  enabledBorder: authOutlineInputBorder,
-                  focusedBorder: authOutlineInputBorder.copyWith(
-                      borderSide: const BorderSide(color: Color(0xFFFF7643)))),
+                    borderSide: const BorderSide(color: Color(0xFFFF7643))),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
+          // is merging checkbox
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Checkbox(value: _isMerging, onChanged: (newValue) {
+                if(newValue != null) {
+                  setState(() {
+                    _isMerging = newValue;
+                  });
+                }
+              }),
+              const SizedBox(width: 8,),
+              const Text('Save local Notes'),
+            ],
+          ),
+
+          // login button
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () async {
+              if (_signInformKey.currentState!.validate()) {
+                // Save the form if validations pass
+                _signInformKey.currentState!.save();
+                // Proceed to next action (like submitting the form)
+
+
+                _onLogIn();
+
+              }
+            },
             style: ElevatedButton.styleFrom(
               elevation: 0,
               backgroundColor: const Color(0xFFFF7643),
@@ -193,6 +411,7 @@ class NoAccountText extends StatelessWidget {
         GestureDetector(
           onTap: () {
             // Handle navigation to Sign Up
+            Navigator.of(context).pushReplacementNamed(SignUpScreen.routeName);
           },
           child: const Text(
             "Sign Up",

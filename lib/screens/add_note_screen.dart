@@ -14,7 +14,7 @@ import '../widgets/title_input_widget.dart';
 
 class AddNoteScreen extends StatefulWidget {
   const AddNoteScreen({super.key});
-
+  static const routeName = '/addNoteScreen';
   @override
   State<AddNoteScreen> createState() => _AddNoteScreenState();
 }
@@ -285,12 +285,14 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     }
   }
 
-  void createNote() {
+  Future<void> createNote() async {
     NoteModel note = NoteModel(
         title: titleController.text,
         note: noteController.text,
         bookmarked: false);
-    context.read<NotesProvider>().addNote(note);
+   await context.read<NotesProvider>().addNote(note, context);
+
+    // TODO sync to synced
   }
 
   void editBookmark(NoteModel note, bool flag) {
@@ -299,15 +301,19 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
   Future<void> submitNote(int index) async {
     if (index != -1) {
-      // 
+      // updating the existing note
       NoteModel fetchNote = context.read<NotesProvider>().notes[index];
       NoteModel newNote = NoteModel(
+        id: fetchNote.id,
           title: titleController.text,
           note: noteController.text,
           bookmarked: fetchNote.bookmarked);
 
-      context.read<NotesProvider>().editNote(fetchNote, newNote);
+      await context.read<NotesProvider>().editNote(fetchNote, newNote, context);
+
+      // TODO sync to synced
     } else {
+      // creating new note
       // submit note by clicking check icon
       NoteModel newNote = NoteModel(
           title: titleController.text,
@@ -315,7 +321,10 @@ class _AddNoteScreenState extends State<AddNoteScreen>
           bookmarked: false);
 
       thisNoteIndex =
-          await context.read<NotesProvider>().addNoteReturnIndex(newNote);
+          await context.read<NotesProvider>().addNoteReturnIndex(newNote, context);
+
+
+      // TODO sync to synced
     }
 
     _titleFocusNode.unfocus();
@@ -327,6 +336,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       isEditingTitle.value = false;
     });
   }
+
+
+
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -349,8 +361,8 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        onPopScreen(context);
+      onPopInvokedWithResult: (didPop, result) async {
+        await onPopScreen(context);
       },
       child: SafeArea(
         child: Scaffold(
@@ -388,10 +400,11 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     );
   }
 
-  void onPopScreen(BuildContext context) {
+  Future<void> onPopScreen(BuildContext context) async {
     if (checkForValidNote()) {
       if (isEditing.value) {
-        createNote();
+        // await createNote();
+        await submitNote(thisNoteIndex);
       }
 
       titleController.clear();
@@ -400,6 +413,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (Navigator.of(context).canPop()) {
+
         Navigator.of(context).pop();
       }
     });
@@ -679,7 +693,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 backgroundColor: Theme.of(context).colorScheme.surface,
       toolbarHeight: kToolbarHeight,
       leading: IconButton(
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: ()async {
+          await onPopScreen(context);
+        },
         icon: const Icon(Icons.arrow_back_ios_new),
         iconSize: 25,
         color: Theme.of(context).iconTheme.color,

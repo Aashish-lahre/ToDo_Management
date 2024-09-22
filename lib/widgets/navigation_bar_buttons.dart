@@ -42,7 +42,7 @@ class NavigationBarButtons extends StatelessWidget {
               scaffoldMessage(message: 'Share, Coming Soon...',context:  context,screenSize:  screenSize);
             }, icon: const Icon(Icons.share_rounded)),
             IconButton(onPressed: () {
-              context.read<NotesProvider>().deleteNote(thisNoteIndex);
+              context.read<NotesProvider>().deleteNote(thisNoteIndex, context);
               Navigator.of(context).pop();
             }, icon: const Icon(Icons.delete_rounded)),
             IconButton(onPressed: () {

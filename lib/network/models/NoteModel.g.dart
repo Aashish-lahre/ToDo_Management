@@ -20,8 +20,9 @@ class NoteModelAdapter extends TypeAdapter<NoteModel> {
       title: fields[0] as String,
       note: fields[5] as String,
       bookmarked: fields[2] as bool,
+      time: fields[1] as DateTime?,
+      id: fields[6] as String?,
     )
-      ..time = fields[1] as DateTime
       ..noteLength = fields[3] as int
       ..titleLength = fields[4] as int;
   }
@@ -29,7 +30,7 @@ class NoteModelAdapter extends TypeAdapter<NoteModel> {
   @override
   void write(BinaryWriter writer, NoteModel obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.title)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class NoteModelAdapter extends TypeAdapter<NoteModel> {
       ..writeByte(4)
       ..write(obj.titleLength)
       ..writeByte(5)
-      ..write(obj.note);
+      ..write(obj.note)
+      ..writeByte(6)
+      ..write(obj.id);
   }
 
   @override
